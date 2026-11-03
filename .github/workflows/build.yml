@@ -120,11 +120,11 @@ jobs:
           cmake --build --preset Release
           arm-none-eabi-size build/Release/${TARGET_NAME}.elf
 
-      # Step 11 - Upload Debug firmware (.elf for debugging, .bin for flashing)
+        # Step 11 - Upload Debug firmware (.elf for debugging, .bin for flashing)
       - name: Upload Debug Firmware
         uses: actions/upload-artifact@v4
         with:
-          name: firmware-debug
+          name: interface-firmware
           path: |
             ${{ env.PROJECT_DIR }}/build/Debug/${{ env.TARGET_NAME }}.elf
             ${{ env.PROJECT_DIR }}/build/Debug/${{ env.TARGET_NAME }}.bin

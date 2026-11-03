@@ -1,6 +1,8 @@
 name: CNR MCU (STM32H753) CI Pipeline
 
 # Runs on push / PR for these branches, and manually from the Actions tab.
+# NOTE: every branch listed under push must contain the CNR-ICU-0.2 folder,
+#       otherwise the "Check Project Folder" step fails on purpose.
 on:
   push:
     branches:
@@ -126,5 +128,84 @@ jobs:
           path: |
             ${{ env.PROJECT_DIR }}/build/Debug/${{ env.TARGET_NAME }}.elf
             ${{ env.PROJECT_DIR }}/build/Debug/${{ env.TARGET_NAME }}.bin
+          if-no-files-found: error
+          retention-days: 7
+
+  # ─── JOB 2: DOXYGEN DOCUMENTATION ───────────────────────────────────────────
+  # Runs in parallel with the build job. Documents only our own code
+  # (Core, LWIP/MBEDTLS App+Target), not Drivers/ or Middlewares/.
+  doxygen:
+    name: Doxygen Documentation
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1 - Checkout (manual run: the ref typed in the Run workflow box)
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref || github.ref }}
+
+      # Step 2 - Stop early with a clear message if PROJECT_DIR is wrong
+      - name: Check Project Folder
+        run: |
+          if [ ! -d "$PROJECT_DIR/Core" ]; then
+            echo "ERROR: '$PROJECT_DIR/Core' not found. Folders in repo:"
+            ls -la
+            exit 1
+          fi
+          echo "OK: using project folder '$PROJECT_DIR'"
+
+      # Step 3 - Install Doxygen (graphviz draws the call/include graphs)
+      - name: Install Doxygen
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y doxygen graphviz
+          doxygen --version
+
+      # Step 4 - Use the project Doxyfile, or create a default one for our own code only.
+      #          Settings are appended: in a Doxyfile the last value of a tag wins.
+      - name: Setup Doxyfile
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: |
+          if [ ! -f Doxyfile ]; then
+            echo "No Doxyfile found, generating default..."
+            doxygen -g Doxyfile > /dev/null
+            {
+              echo 'PROJECT_NAME     = "CNR-ICU-0.2"'
+              echo 'PROJECT_BRIEF    = "CNR MCU firmware (STM32H753)"'
+              echo 'INPUT            = Core/Src Core/Inc LWIP/App LWIP/Target MBEDTLS/App MBEDTLS/Target'
+              echo 'FILE_PATTERNS    = *.c *.h'
+              echo 'RECURSIVE        = YES'
+              echo 'EXTRACT_ALL      = YES'
+              echo 'EXTRACT_STATIC   = YES'
+              echo 'GENERATE_LATEX   = NO'
+              echo 'OUTPUT_DIRECTORY = doxygen_docs'
+              echo 'HAVE_DOT         = YES'
+              echo 'WARN_LOGFILE     ='
+            } >> Doxyfile
+          fi
+          grep -E '^(PROJECT_NAME|INPUT|OUTPUT_DIRECTORY) ' Doxyfile | tail -3
+
+      # Step 5 - Generate the documentation (warnings are shown in this step's log, not fatal)
+      - name: Run Doxygen
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: |
+          doxygen Doxyfile 2>&1 | tee doxygen_output.log
+          WARNINGS=$(grep -c "warning:" doxygen_output.log || true)
+          echo "---"
+          echo "Doxygen Warnings: $WARNINGS"
+          if [ "$WARNINGS" -gt 0 ]; then
+            echo "WARNING: $WARNINGS Doxygen warning(s) found - see the output above"
+          else
+            echo "PASSED: No Doxygen warnings found."
+          fi
+          test -f doxygen_docs/html/index.html || { echo "ERROR: HTML was not generated"; exit 1; }
+
+      # Step 6 - Upload the generated HTML documentation (open html/index.html after download)
+      - name: Upload Doxygen HTML
+        uses: actions/upload-artifact@v4
+        with:
+          name: doxygen-html
+          path: ${{ env.PROJECT_DIR }}/doxygen_docs/html
           if-no-files-found: error
           retention-days: 7

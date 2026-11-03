@@ -1,1 +1,130 @@
+name: CNR MCU (STM32H753) CI Pipeline
 
+# Runs on push / PR for these branches, and manually from the Actions tab.
+on:
+  push:
+    branches:
+      - main
+      - CNR-MCU
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Branch, tag or commit SHA to build'
+        required: true
+        default: 'CNR-MCU'
+
+# ─── PROJECT SETTINGS (set once, used everywhere) ─────────────────────────────
+env:
+  PROJECT_DIR: CNR-ICU-0.2        # folder with CMakeLists.txt and CMakePresets.json
+  TARGET_NAME: CNR-ICU-0.2        # output file name: build/<cfg>/<TARGET_NAME>.elf
+
+jobs:
+  # ─── JOB 1: BUILD FIRMWARE ──────────────────────────────────────────────────
+  # Tool versions match the developer PC: ARM GCC 15.2.1, CMake 4.3.1, Ninja 1.13.2
+  build:
+    name: Build CNR MCU Firmware
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1 - Checkout (manual run: the ref typed in the Run workflow box)
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref || github.ref }}
+
+      # Step 2 - Show exactly which commit is being built
+      - name: Show Build Source
+        run: |
+          echo "Event : ${{ github.event_name }}"
+          echo "Ref   : ${{ github.event.inputs.ref || github.ref }}"
+          echo "Commit: $(git rev-parse HEAD)"
+          git log -1 --format='%an, %ad: %s' --date=format:'%d/%m/%Y %H:%M'
+
+      # Step 3 - Stop early with a clear message if PROJECT_DIR is wrong
+      - name: Check Project Folder
+        run: |
+          if [ ! -f "$PROJECT_DIR/CMakePresets.json" ]; then
+            echo "ERROR: '$PROJECT_DIR/CMakePresets.json' not found. Folders in repo:"
+            ls -la
+            exit 1
+          fi
+          echo "OK: using project folder '$PROJECT_DIR'"
+
+      # Step 4 - Install Arm GNU Toolchain 15.2.rel1 (same as the PC)
+      - name: Install ARM GCC Toolchain
+        run: |
+          TC="arm-gnu-toolchain-15.2.rel1-x86_64-arm-none-eabi"
+          wget -q "https://developer.arm.com/-/media/Files/downloads/gnu/15.2.rel1/binrel/${TC}.tar.xz"
+          tar -xf "${TC}.tar.xz" -C "$HOME"
+          echo "$HOME/${TC}/bin" >> "$GITHUB_PATH"    # put arm-none-eabi-gcc on PATH for next steps
+
+      # Step 5 - Install Ninja 1.13.2 (same as the PC)
+      - name: Install Ninja
+        run: |
+          wget -q "https://github.com/ninja-build/ninja/releases/download/v1.13.2/ninja-linux.zip"
+          unzip -q ninja-linux.zip -d "$HOME/ninja"
+          echo "$HOME/ninja" >> "$GITHUB_PATH"
+
+      # Step 6 - Install CMake 4.3.1 (same as the PC)
+      - name: Install CMake
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: '4.3.1'
+
+      # Step 7 - Print tool versions and stop if any of them does not match the PC
+      - name: Check Tool Versions
+        run: |
+          arm-none-eabi-gcc --version
+          ninja --version
+          cmake --version
+          FAIL=0
+          arm-none-eabi-gcc --version | head -1 | grep -q " 15.2.1 " || { echo "ERROR: ARM GCC is not 15.2.1"; FAIL=1; }
+          [ "$(ninja --version)" = "1.13.2" ]                         || { echo "ERROR: Ninja is not 1.13.2"; FAIL=1; }
+          cmake --version | head -1 | grep -q " 4.3.1$"               || { echo "ERROR: CMake is not 4.3.1"; FAIL=1; }
+          if [ "$FAIL" -ne 0 ]; then exit 1; fi
+          echo "OK: tool versions match the developer PC"
+
+      # Step 8 - Prepare the source for a plain Arm GCC build (CI copy only, repo not changed):
+      #  - remove the committed build/ folder (its CMakeCache.txt has another PC's paths)
+      #  - remove -fcyclomatic-complexity: an ST-GCC-only flag that Arm GCC rejects
+      - name: Prepare Build Folder and Flags
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: |
+          rm -rf build
+          sed -i '/-fcyclomatic-complexity/d' cmake/flags.cmake
+          if grep -q "cyclomatic" cmake/flags.cmake; then
+            echo "ERROR: -fcyclomatic-complexity still in cmake/flags.cmake"; exit 1
+          fi
+          echo "OK: build/ removed, ST-only flag removed for CI"
+
+      # Step 9 - Configure and build Debug firmware, then make the .bin from the .elf
+      - name: Build Debug Firmware
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: |
+          cmake --preset Debug
+          cmake --build --preset Debug
+          arm-none-eabi-objcopy -O binary build/Debug/${TARGET_NAME}.elf build/Debug/${TARGET_NAME}.bin
+          arm-none-eabi-size build/Debug/${TARGET_NAME}.elf
+          ls -l build/Debug/${TARGET_NAME}.elf build/Debug/${TARGET_NAME}.bin
+
+      # Step 10 - Build Release firmware (compile check only, not uploaded)
+      - name: Build Release Firmware
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: |
+          cmake --preset Release
+          cmake --build --preset Release
+          arm-none-eabi-size build/Release/${TARGET_NAME}.elf
+
+      # Step 11 - Upload Debug firmware (.elf for debugging, .bin for flashing)
+      - name: Upload Debug Firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-debug
+          path: |
+            ${{ env.PROJECT_DIR }}/build/Debug/${{ env.TARGET_NAME }}.elf
+            ${{ env.PROJECT_DIR }}/build/Debug/${{ env.TARGET_NAME }}.bin
+          if-no-files-found: error
+          retention-days: 7

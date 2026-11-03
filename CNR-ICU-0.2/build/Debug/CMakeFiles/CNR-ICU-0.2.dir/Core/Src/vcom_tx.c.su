@@ -1,0 +1,8 @@
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/vcom_tx.c:52:17:vcom_lock	16	static,ignoring_inline_asm
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/vcom_tx.c:66:13:vcom_unlock	24	static,ignoring_inline_asm
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/vcom_tx.c:79:17:vcom_used	4	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/vcom_tx.c:92:13:vcom_kick	16	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/vcom_tx.c:140:10:vcom_tx_write	40	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/vcom_tx.c:200:6:vcom_tx_on_tx_complete	24	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/vcom_tx.c:222:6:vcom_tx_init	16	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/vcom_tx.c:281:5:_write	24	static

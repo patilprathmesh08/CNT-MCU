@@ -1,0 +1,10 @@
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/uart_dispatch.c:109:16:scope_index_for_selector	5
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/uart_dispatch.c:157:12:slot_index_for	5
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/uart_dispatch.c:167:12:slot_index_for_selector	5
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/uart_dispatch.c:179:5:uart_dispatch_get_last	6
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/uart_dispatch.c:207:20:selector_name	5
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/uart_dispatch.c:219:5:uart_dispatch_send	1
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/uart_dispatch.c:229:5:uart_dispatch_send_seq	8
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/uart_dispatch.c:336:6:HAL_UARTEx_RxEventCallback	6
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/uart_dispatch.c:406:6:HAL_UART_TxCpltCallback	11
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/uart_dispatch.c:506:6:uart_dispatch_task_run	12

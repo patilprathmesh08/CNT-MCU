@@ -1,0 +1,16 @@
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/json_parser.c:119:12:json_parser_find	5
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/json_parser.c:161:16:json_parser_is_value_char	8
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/json_parser.c:187:17:json_parser_read_value	27
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/json_parser.c:334:17:json_parser_label_of	5
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/json_parser.c:386:17:json_parser_emit_field	10
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/json_parser.c:534:17:json_parser_to_u32	4
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/json_parser.c:554:17:json_parser_extract_all	5
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/json_parser.c:608:13:json_parser_begin_object	1
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/json_parser.c:625:6:json_parser_init	2
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/json_parser.c:648:6:json_parser_set_object_hooks	1
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/json_parser.c:655:6:json_parser_reset	2
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/json_parser.c:678:10:json_parser_feed	19
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/json_parser.c:896:13:json_parser_test_emit	2
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/json_parser.c:923:16:json_parser_test_is	2
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/json_parser.c:933:13:json_parser_test_clear	1
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/json_parser.c:940:5:json_parser_selftest	45

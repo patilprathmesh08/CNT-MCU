@@ -1,0 +1,12 @@
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/http_server.c:281:13:resp_build	40	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/http_server.c:330:13:resp_build_json	676	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/http_server.c:504:13:lat_init	16	static,ignoring_inline_asm
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/http_server.c:539:24:lat_us_since	16	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/http_server.c:548:7:httpd_post_begin	32	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/http_server.c:640:7:httpd_post_receive_data	24	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/http_server.c:668:6:httpd_post_finished	40	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/http_server.c:809:16:parse_sel	24	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/http_server.c:820:5:fs_open_custom	816	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/http_server.c:1020:6:fs_close_custom	16	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/http_server.c:1088:33:http_server_tls_config	24	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/http_server.c:1209:6:http_server_start	32	static

@@ -1,0 +1,13 @@
+F:/VS_STM32_temp/CNR-ICU-0.2/MBEDTLS/App/net_sockets.c:104:6:mbedtls_net_init	1
+F:/VS_STM32_temp/CNR-ICU-0.2/MBEDTLS/App/net_sockets.c:118:5:mbedtls_net_connect	7
+F:/VS_STM32_temp/CNR-ICU-0.2/MBEDTLS/App/net_sockets.c:189:5:mbedtls_net_bind	11
+F:/VS_STM32_temp/CNR-ICU-0.2/MBEDTLS/App/net_sockets.c:261:12:net_would_block	3
+F:/VS_STM32_temp/CNR-ICU-0.2/MBEDTLS/App/net_sockets.c:290:5:mbedtls_net_accept	16
+F:/VS_STM32_temp/CNR-ICU-0.2/MBEDTLS/App/net_sockets.c:398:5:mbedtls_net_set_block	1
+F:/VS_STM32_temp/CNR-ICU-0.2/MBEDTLS/App/net_sockets.c:404:5:mbedtls_net_set_nonblock	1
+F:/VS_STM32_temp/CNR-ICU-0.2/MBEDTLS/App/net_sockets.c:414:5:mbedtls_net_poll	16
+F:/VS_STM32_temp/CNR-ICU-0.2/MBEDTLS/App/net_sockets.c:469:6:mbedtls_net_usleep	1
+F:/VS_STM32_temp/CNR-ICU-0.2/MBEDTLS/App/net_sockets.c:483:5:mbedtls_net_recv	7
+F:/VS_STM32_temp/CNR-ICU-0.2/MBEDTLS/App/net_sockets.c:515:5:mbedtls_net_recv_timeout	8
+F:/VS_STM32_temp/CNR-ICU-0.2/MBEDTLS/App/net_sockets.c:554:5:mbedtls_net_send	7
+F:/VS_STM32_temp/CNR-ICU-0.2/MBEDTLS/App/net_sockets.c:586:6:mbedtls_net_free	2

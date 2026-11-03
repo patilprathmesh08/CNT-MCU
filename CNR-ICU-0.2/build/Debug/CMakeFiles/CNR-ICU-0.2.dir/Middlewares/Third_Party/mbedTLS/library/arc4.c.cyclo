@@ -1,0 +1,4 @@
+F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/mbedTLS/library/arc4.c:51:6:mbedtls_arc4_init	1
+F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/mbedTLS/library/arc4.c:56:6:mbedtls_arc4_free	2
+F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/mbedTLS/library/arc4.c:67:6:mbedtls_arc4_setup	4
+F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/mbedTLS/library/arc4.c:97:5:mbedtls_arc4_crypt	2

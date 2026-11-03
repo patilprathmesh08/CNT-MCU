@@ -1,0 +1,4 @@
+F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/LwIP/src/api/netdb.c:93:1:lwip_gethostbyname	24	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/LwIP/src/api/netdb.c:167:1:lwip_gethostbyname_r	48	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/LwIP/src/api/netdb.c:241:1:lwip_freeaddrinfo	24	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/LwIP/src/api/netdb.c:274:1:lwip_getaddrinfo	64	static

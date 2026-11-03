@@ -1,0 +1,9 @@
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/mdns_resolver.c:163:13:mdns_dns_found_callback	2
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/mdns_resolver.c:219:13:mdns_issue_query_on_tcpip	3
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/mdns_resolver.c:282:13:mdns_begin_attempt	2
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/mdns_resolver.c:316:6:mdns_resolver_init	1
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/mdns_resolver.c:341:9:mdns_resolver_start	4
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/mdns_resolver.c:401:6:mdns_resolver_poll	7
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/mdns_resolver.c:493:23:mdns_resolver_get_state	1
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/mdns_resolver.c:507:9:mdns_resolver_get_target	3
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/mdns_resolver.c:547:10:mdns_resolver_get_attempts	1

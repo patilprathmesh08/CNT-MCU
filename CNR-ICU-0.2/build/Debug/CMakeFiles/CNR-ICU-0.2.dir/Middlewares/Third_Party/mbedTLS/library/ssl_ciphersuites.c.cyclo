@@ -1,0 +1,9 @@
+F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/mbedTLS/library/ssl_ciphersuites.c:2185:12:ciphersuite_is_removed	4
+F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/mbedTLS/library/ssl_ciphersuites.c:2205:12:mbedtls_ssl_list_ciphersuites	6
+F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/mbedTLS/library/ssl_ciphersuites.c:2236:34:mbedtls_ssl_ciphersuite_from_string	4
+F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/mbedTLS/library/ssl_ciphersuites.c:2255:34:mbedtls_ssl_ciphersuite_from_id	3
+F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/mbedTLS/library/ssl_ciphersuites.c:2270:13:mbedtls_ssl_get_ciphersuite_name	2
+F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/mbedTLS/library/ssl_ciphersuites.c:2282:5:mbedtls_ssl_get_ciphersuite_id	2
+F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/mbedTLS/library/ssl_ciphersuites.c:2295:19:mbedtls_ssl_get_ciphersuite_sig_pk_alg	4
+F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/mbedTLS/library/ssl_ciphersuites.c:2317:19:mbedtls_ssl_get_ciphersuite_sig_alg	4
+F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/mbedTLS/library/ssl_ciphersuites.c:2338:5:mbedtls_ssl_ciphersuite_uses_ec	4

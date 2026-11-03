@@ -1,0 +1,2 @@
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/freertos.c:82:6:vApplicationStackOverflowHook	2
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/freertos.c:107:6:vApplicationMallocFailedHook	1

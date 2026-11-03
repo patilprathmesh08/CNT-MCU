@@ -1,0 +1,17 @@
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/scope_trig.c:123:17:scope_trig_elapsed_us	24	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/scope_trig.c:151:17:scope_trig_lock	16	static,ignoring_inline_asm
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/scope_trig.c:165:13:scope_trig_unlock	24	static,ignoring_inline_asm
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/scope_trig.c:172:6:scope_trig_init	24	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/scope_trig.c:271:13:scope_trig_record_span	16	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/scope_trig.c:299:13:scope_trig_check_done	8	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/scope_trig.c:344:13:scope_trig_arm_locked	8	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/scope_trig.c:365:6:scope_trig_data_rx	16	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/scope_trig.c:388:6:scope_trig_hold_idle	24	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/scope_trig.c:435:6:scope_trig_eth_rx	16	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/scope_trig.c:504:13:scope_trig_test_arm	8	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/scope_trig.c:513:6:scope_trig_seq_begin	24	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/scope_trig.c:567:6:scope_trig_seq_expect	24	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/scope_trig.c:584:6:scope_trig_seq_commit	16	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/scope_trig.c:618:6:scope_trig_seq_uart_done	24	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/scope_trig.c:754:6:scope_trig_tx_complete	16	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/scope_trig.c:829:5:scope_trig_selftest	24	static

@@ -1,0 +1,7 @@
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/websocket.c:93:9:ws_make_key	56	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/websocket.c:134:9:ws_expected_accept	160	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/websocket.c:205:9:ws_parse_header	88	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/websocket.c:369:9:ws_build_frame	40	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/websocket.c:502:6:ws_unmask	32	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/websocket.c:533:13:ws_opcode_name	24	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/websocket.c:613:9:ws_selftest	320	static

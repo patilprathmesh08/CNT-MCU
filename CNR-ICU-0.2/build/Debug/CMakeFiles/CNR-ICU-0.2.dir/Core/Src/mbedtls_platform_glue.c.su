@@ -1,0 +1,3 @@
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/mbedtls_platform_glue.c:103:7:mbedtls_platform_calloc	24	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/mbedtls_platform_glue.c:200:6:mbedtls_platform_free	16	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/mbedtls_platform_glue.c:249:5:_gettimeofday	40	static

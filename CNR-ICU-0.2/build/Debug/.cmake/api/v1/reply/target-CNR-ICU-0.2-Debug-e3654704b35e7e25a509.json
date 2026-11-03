@@ -1,0 +1,2303 @@
+{
+	"artifacts" : 
+	[
+		{
+			"path" : "CNR-ICU-0.2.elf"
+		}
+	],
+	"backtrace" : 1,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_executable",
+			"target_link_options",
+			"include",
+			"target_compile_options",
+			"target_compile_definitions",
+			"target_include_directories",
+			"target_sources"
+		],
+		"files" : 
+		[
+			"CMakeLists.txt",
+			"cmake/flags.cmake",
+			"cmake/files.cmake"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 24,
+				"parent" : 0
+			},
+			{
+				"command" : 2,
+				"file" : 0,
+				"line" : 27,
+				"parent" : 0
+			},
+			{
+				"file" : 1,
+				"parent" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 132,
+				"parent" : 3
+			},
+			{
+				"command" : 3,
+				"file" : 1,
+				"line" : 5,
+				"parent" : 3
+			},
+			{
+				"command" : 4,
+				"file" : 1,
+				"line" : 102,
+				"parent" : 3
+			},
+			{
+				"command" : 5,
+				"file" : 1,
+				"line" : 67,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 0,
+				"line" : 29,
+				"parent" : 0
+			},
+			{
+				"file" : 2,
+				"parent" : 8
+			},
+			{
+				"command" : 6,
+				"file" : 2,
+				"line" : 2,
+				"parent" : 9
+			}
+		]
+	},
+	"codemodelVersion" : 
+	{
+		"major" : 2,
+		"minor" : 10
+	},
+	"compileGroups" : 
+	[
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "-fdata-sections -ffunction-sections -Wl,--gc-sections -Wno-comment"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-mcpu=cortex-m7"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-mfpu=fpv5-d16"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-mfloat-abi=hard"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-mlittle-endian"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-mthumb"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "--specs=nano.specs"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-std=gnu11"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-g3"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-O0"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-Wall"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-fstack-usage"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-fcyclomatic-complexity"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 6,
+					"define" : "DEBUG"
+				},
+				{
+					"backtrace" : 6,
+					"define" : "MBEDTLS_CONFIG_FILE=<mbedtls_config.h>"
+				},
+				{
+					"backtrace" : 6,
+					"define" : "STM32H753xx"
+				},
+				{
+					"backtrace" : 6,
+					"define" : "USE_HAL_DRIVER"
+				},
+				{
+					"backtrace" : 6,
+					"define" : "USE_PWR_LDO_SUPPLY"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/LWIP/App"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/LWIP/Target"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Core/Inc"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/LwIP/src/include"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/LwIP/system"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Drivers/STM32H7xx_HAL_Driver/Inc"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Drivers/STM32H7xx_HAL_Driver/Inc/Legacy"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Drivers/BSP/Components/lan8742"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/LwIP/src/include/netif/ppp"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Drivers/BSP/STM32H7xx_Nucleo"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Drivers/CMSIS/Device/ST/STM32H7xx/Include"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/LwIP/src/include/lwip"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/LwIP/src/include/lwip/apps"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/LwIP/src/include/lwip/priv"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/LwIP/src/include/lwip/prot"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/LwIP/src/include/netif"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/LwIP/src/include/compat/posix"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/LwIP/src/include/compat/posix/arpa"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/LwIP/src/include/compat/posix/net"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/LwIP/src/include/compat/posix/sys"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/LwIP/src/include/compat/stdc"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/LwIP/system/arch"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Drivers/CMSIS/Include"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/LwIP/src/apps/http"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/FreeRTOS/Source/include"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Drivers/CMSIS/RTOS2/Include"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/MBEDTLS/App"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/mbedTLS/include/mbedtls"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/mbedTLS/include"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/LwIP/src/apps/altcp_tls"
+				}
+			],
+			"language" : "C",
+			"sourceIndexes" : 
+			[
+				0,
+				1,
+				2,
+				3,
+				4,
+				5,
+				6,
+				7,
+				8,
+				9,
+				10,
+				11,
+				12,
+				13,
+				14,
+				15,
+				16,
+				17,
+				18,
+				20,
+				21,
+				22,
+				23,
+				24,
+				25,
+				26,
+				27,
+				28,
+				29,
+				30,
+				31,
+				32,
+				33,
+				34,
+				35,
+				36,
+				37,
+				38,
+				39,
+				40,
+				41,
+				42,
+				43,
+				44,
+				45,
+				46,
+				47,
+				48,
+				49,
+				50,
+				51,
+				52,
+				53,
+				54,
+				55,
+				56,
+				57,
+				58,
+				59,
+				60,
+				61,
+				62,
+				63,
+				64,
+				65,
+				66,
+				67,
+				68,
+				69,
+				70,
+				71,
+				72,
+				73,
+				74,
+				75,
+				76,
+				77,
+				78,
+				79,
+				80,
+				81,
+				82,
+				83,
+				84,
+				85,
+				86,
+				87,
+				88,
+				89,
+				90,
+				91,
+				92,
+				93,
+				94,
+				95,
+				96,
+				97,
+				98,
+				99,
+				100,
+				101,
+				102,
+				103,
+				104,
+				105,
+				106,
+				107,
+				108,
+				109,
+				110,
+				111,
+				112,
+				113,
+				114,
+				115,
+				116,
+				117,
+				118,
+				119,
+				120,
+				121,
+				122,
+				123,
+				124,
+				125,
+				126,
+				127,
+				128,
+				129,
+				130,
+				131,
+				132,
+				133,
+				134,
+				135,
+				136,
+				137,
+				138,
+				139,
+				140,
+				141,
+				142,
+				143,
+				144,
+				145,
+				146,
+				147,
+				148,
+				149,
+				150,
+				151,
+				152,
+				153,
+				154,
+				155,
+				156,
+				157,
+				158,
+				159,
+				160,
+				161,
+				162,
+				163,
+				164,
+				165,
+				166,
+				167,
+				168,
+				169,
+				170,
+				171,
+				172,
+				173,
+				174,
+				175,
+				176,
+				177,
+				178,
+				179,
+				180,
+				181,
+				182,
+				183,
+				184,
+				185,
+				186,
+				187,
+				188,
+				189,
+				190,
+				191,
+				192,
+				193,
+				194,
+				195,
+				196,
+				197,
+				198,
+				199,
+				200,
+				201,
+				202,
+				203,
+				204,
+				205,
+				206,
+				207,
+				208,
+				209,
+				210,
+				211,
+				212,
+				213,
+				214
+			]
+		},
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"backtrace" : 5,
+					"fragment" : "-mcpu=cortex-m7"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-mfpu=fpv5-d16"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-mfloat-abi=hard"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-mlittle-endian"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-mthumb"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "--specs=nano.specs"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-g3"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "-x"
+				},
+				{
+					"backtrace" : 5,
+					"fragment" : "assembler-with-cpp"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 6,
+					"define" : "DEBUG"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/LWIP/App"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/LWIP/Target"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Core/Inc"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/LwIP/src/include"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/LwIP/system"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Drivers/STM32H7xx_HAL_Driver/Inc"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Drivers/STM32H7xx_HAL_Driver/Inc/Legacy"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Drivers/BSP/Components/lan8742"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/LwIP/src/include/netif/ppp"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Drivers/BSP/STM32H7xx_Nucleo"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Drivers/CMSIS/Device/ST/STM32H7xx/Include"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/LwIP/src/include/lwip"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/LwIP/src/include/lwip/apps"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/LwIP/src/include/lwip/priv"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/LwIP/src/include/lwip/prot"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/LwIP/src/include/netif"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/LwIP/src/include/compat/posix"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/LwIP/src/include/compat/posix/arpa"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/LwIP/src/include/compat/posix/net"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/LwIP/src/include/compat/posix/sys"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/LwIP/src/include/compat/stdc"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/LwIP/system/arch"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Drivers/CMSIS/Include"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/LwIP/src/apps/http"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/FreeRTOS/Source/include"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Drivers/CMSIS/RTOS2/Include"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/MBEDTLS/App"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/mbedTLS/include/mbedtls"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/mbedTLS/include"
+				},
+				{
+					"backtrace" : 7,
+					"path" : "F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/LwIP/src/apps/altcp_tls"
+				}
+			],
+			"language" : "ASM",
+			"sourceIndexes" : 
+			[
+				19
+			]
+		}
+	],
+	"id" : "CNR-ICU-0.2::@6890427a1f51a3e7e1df",
+	"link" : 
+	{
+		"commandFragments" : 
+		[
+			{
+				"fragment" : "-fdata-sections -ffunction-sections -Wl,--gc-sections -Wno-comment",
+				"role" : "flags"
+			},
+			{
+				"backtrace" : 4,
+				"fragment" : "-mcpu=cortex-m7",
+				"role" : "flags"
+			},
+			{
+				"backtrace" : 4,
+				"fragment" : "-mfpu=fpv5-d16",
+				"role" : "flags"
+			},
+			{
+				"backtrace" : 4,
+				"fragment" : "-mfloat-abi=hard",
+				"role" : "flags"
+			},
+			{
+				"backtrace" : 4,
+				"fragment" : "-mlittle-endian",
+				"role" : "flags"
+			},
+			{
+				"backtrace" : 4,
+				"fragment" : "-mthumb",
+				"role" : "flags"
+			},
+			{
+				"backtrace" : 4,
+				"fragment" : "--specs=nano.specs",
+				"role" : "flags"
+			},
+			{
+				"backtrace" : 4,
+				"fragment" : "-TF:/VS_STM32_temp/CNR-ICU-0.2/build/Debug/STM32H753ZITX_FLASH.ld",
+				"role" : "flags"
+			},
+			{
+				"backtrace" : 4,
+				"fragment" : "--specs=nosys.specs",
+				"role" : "flags"
+			},
+			{
+				"backtrace" : 4,
+				"fragment" : "-Wl,-Map=F:/VS_STM32_temp/CNR-ICU-0.2/build/Debug/CNR-ICU-0.2.map",
+				"role" : "flags"
+			},
+			{
+				"backtrace" : 4,
+				"fragment" : "-static",
+				"role" : "flags"
+			}
+		],
+		"language" : "C"
+	},
+	"name" : "CNR-ICU-0.2",
+	"nameOnDisk" : "CNR-ICU-0.2.elf",
+	"paths" : 
+	{
+		"build" : ".",
+		"source" : "."
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "Source Files",
+			"sourceIndexes" : 
+			[
+				0,
+				1,
+				2,
+				3,
+				4,
+				5,
+				6,
+				7,
+				8,
+				9,
+				10,
+				11,
+				12,
+				13,
+				14,
+				15,
+				16,
+				17,
+				18,
+				20,
+				21,
+				22,
+				23,
+				24,
+				25,
+				26,
+				27,
+				28,
+				29,
+				30,
+				31,
+				32,
+				33,
+				34,
+				35,
+				36,
+				37,
+				38,
+				39,
+				40,
+				41,
+				42,
+				43,
+				44,
+				45,
+				46,
+				47,
+				48,
+				49,
+				50,
+				51,
+				52,
+				53,
+				54,
+				55,
+				56,
+				57,
+				58,
+				59,
+				60,
+				61,
+				62,
+				63,
+				64,
+				65,
+				66,
+				67,
+				68,
+				69,
+				70,
+				71,
+				72,
+				73,
+				74,
+				75,
+				76,
+				77,
+				78,
+				79,
+				80,
+				81,
+				82,
+				83,
+				84,
+				85,
+				86,
+				87,
+				88,
+				89,
+				90,
+				91,
+				92,
+				93,
+				94,
+				95,
+				96,
+				97,
+				98,
+				99,
+				100,
+				101,
+				102,
+				103,
+				104,
+				105,
+				106,
+				107,
+				108,
+				109,
+				110,
+				111,
+				112,
+				113,
+				114,
+				115,
+				116,
+				117,
+				118,
+				119,
+				120,
+				121,
+				122,
+				123,
+				124,
+				125,
+				126,
+				127,
+				128,
+				129,
+				130,
+				131,
+				132,
+				133,
+				134,
+				135,
+				136,
+				137,
+				138,
+				139,
+				140,
+				141,
+				142,
+				143,
+				144,
+				145,
+				146,
+				147,
+				148,
+				149,
+				150,
+				151,
+				152,
+				153,
+				154,
+				155,
+				156,
+				157,
+				158,
+				159,
+				160,
+				161,
+				162,
+				163,
+				164,
+				165,
+				166,
+				167,
+				168,
+				169,
+				170,
+				171,
+				172,
+				173,
+				174,
+				175,
+				176,
+				177,
+				178,
+				179,
+				180,
+				181,
+				182,
+				183,
+				184,
+				185,
+				186,
+				187,
+				188,
+				189,
+				190,
+				191,
+				192,
+				193,
+				194,
+				195,
+				196,
+				197,
+				198,
+				199,
+				200,
+				201,
+				202,
+				203,
+				204,
+				205,
+				206,
+				207,
+				208,
+				209,
+				210,
+				211,
+				212,
+				213,
+				214
+			]
+		},
+		{
+			"name" : "",
+			"sourceIndexes" : 
+			[
+				19
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Core/Src/freertos.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Core/Src/http_server.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Core/Src/json_parser.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Core/Src/main.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Core/Src/mbedtls_platform_glue.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Core/Src/mdns_resolver.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Core/Src/mdns_service.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Core/Src/ntp_client.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Core/Src/scope_trig.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Core/Src/stm32h7xx_hal_msp.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Core/Src/stm32h7xx_hal_timebase_tim.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Core/Src/stm32h7xx_it.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Core/Src/stream_client.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Core/Src/syscalls.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Core/Src/sysmem.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Core/Src/system_stm32h7xx.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Core/Src/uart_dispatch.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Core/Src/vcom_tx.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Core/Src/websocket.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 1,
+			"path" : "Core/Startup/startup_stm32h753zitx.s",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Drivers/BSP/Components/lan8742/lan8742.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Drivers/BSP/STM32H7xx_Nucleo/stm32h7xx_nucleo.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_cortex.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_dma.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_dma_ex.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_eth.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_eth_ex.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_exti.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_flash.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_flash_ex.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_gpio.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_hsem.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_i2c.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_i2c_ex.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_mdma.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr_ex.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_rcc.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_rcc_ex.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_rng.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_rng_ex.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_tim.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_tim_ex.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_uart.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_uart_ex.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_usart.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_usart_ex.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "LWIP/App/lwip.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "LWIP/Target/ethernetif.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "MBEDTLS/App/mbedtls.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "MBEDTLS/App/net_sockets.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "MBEDTLS/Target/hardware_rng.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/FreeRTOS/Source/croutine.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/FreeRTOS/Source/event_groups.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/FreeRTOS/Source/list.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/FreeRTOS/Source/portable/Common/mpu_wrappers_v2.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/FreeRTOS/Source/queue.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/FreeRTOS/Source/stream_buffer.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/FreeRTOS/Source/tasks.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/FreeRTOS/Source/timers.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/api/api_lib.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/api/api_msg.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/api/err.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/api/if_api.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/api/netbuf.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/api/netdb.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/api/netifapi.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/api/sockets.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/api/tcpip.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/apps/altcp_tls/altcp_tls_mbedtls.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/apps/altcp_tls/altcp_tls_mbedtls_mem.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/apps/http/fs.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/apps/http/httpd.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/apps/mqtt/mqtt.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/core/altcp.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/core/altcp_alloc.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/core/altcp_tcp.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/core/def.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/core/dns.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/core/inet_chksum.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/core/init.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/core/ip.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/core/ipv4/acd.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/core/ipv4/autoip.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/core/ipv4/dhcp.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/core/ipv4/etharp.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/core/ipv4/icmp.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/core/ipv4/igmp.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/core/ipv4/ip4.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/core/ipv4/ip4_addr.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/core/ipv4/ip4_frag.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/core/ipv6/dhcp6.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/core/ipv6/ethip6.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/core/ipv6/icmp6.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/core/ipv6/inet6.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/core/ipv6/ip6.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/core/ipv6/ip6_addr.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/core/ipv6/ip6_frag.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/core/ipv6/mld6.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/core/ipv6/nd6.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/core/mem.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/core/memp.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/core/netif.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/core/pbuf.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/core/raw.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/core/stats.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/core/sys.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/core/tcp.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/core/tcp_in.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/core/tcp_out.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/core/timeouts.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/core/udp.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/netif/bridgeif.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/netif/bridgeif_fdb.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/netif/ethernet.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/netif/lowpan6.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/netif/lowpan6_ble.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/netif/lowpan6_common.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/netif/ppp/auth.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/netif/ppp/ccp.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/netif/ppp/chap-md5.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/netif/ppp/chap-new.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/netif/ppp/chap_ms.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/netif/ppp/demand.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/netif/ppp/eap.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/netif/ppp/eui64.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/netif/ppp/fsm.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/netif/ppp/ipcp.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/netif/ppp/ipv6cp.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/netif/ppp/lcp.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/netif/ppp/magic.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/netif/ppp/mppe.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/netif/ppp/multilink.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/netif/ppp/ppp.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/netif/ppp/pppapi.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/netif/ppp/pppcrypt.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/netif/ppp/pppoe.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/netif/ppp/pppol2tp.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/netif/ppp/pppos.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/netif/ppp/upap.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/netif/ppp/utils.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/netif/ppp/vj.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/netif/slipif.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/src/netif/zepif.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/LwIP/system/OS/sys_arch.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/aes.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/aesni.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/arc4.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/asn1parse.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/asn1write.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/base64.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/bignum.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/blowfish.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/camellia.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/ccm.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/certs.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/chacha20.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/chachapoly.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/cipher.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/cipher_wrap.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/ctr_drbg.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/des.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/dhm.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/ecdh.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/ecdsa.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/ecp.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/ecp_curves.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/entropy.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/entropy_poll.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/error.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/gcm.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/hkdf.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/hmac_drbg.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/md.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/md5.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/md_wrap.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/memory_buffer_alloc.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/oid.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/padlock.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/pem.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/pk.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/pk_wrap.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/pkcs12.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/pkcs5.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/pkparse.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/pkwrite.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/platform.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/platform_util.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/poly1305.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/ripemd160.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/rsa_internal.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/sha1.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/sha256.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/sha512.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/ssl_cache.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/ssl_ciphersuites.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/ssl_cli.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/ssl_cookie.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/ssl_srv.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/ssl_ticket.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/ssl_tls.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/version.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/version_features.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/x509.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/x509_create.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/x509_crl.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/x509_crt.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/x509_csr.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/x509write_crt.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/x509write_csr.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 10,
+			"compileGroupIndex" : 0,
+			"path" : "Middlewares/Third_Party/mbedTLS/library/xtea.c",
+			"sourceGroupIndex" : 0
+		}
+	],
+	"type" : "EXECUTABLE"
+}

@@ -1,0 +1,10 @@
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/mdns_service.c:171:17:enter_critical_section	16	static,ignoring_inline_asm
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/mdns_service.c:190:13:exit_critical_section	24	static,ignoring_inline_asm
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/mdns_service.c:209:16:is_address_usable	16	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/mdns_service.c:240:13:publish_address	24	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/mdns_service.c:272:13:run_mdns_task	40	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/mdns_service.c:364:6:mdns_service_init	8	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/mdns_service.c:387:9:mdns_service_get_address_gen	24	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/mdns_service.c:422:9:mdns_service_get_address	24	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/mdns_service.c:432:9:mdns_service_is_resolved	4	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/mdns_service.c:437:6:mdns_service_request_refresh	4	static

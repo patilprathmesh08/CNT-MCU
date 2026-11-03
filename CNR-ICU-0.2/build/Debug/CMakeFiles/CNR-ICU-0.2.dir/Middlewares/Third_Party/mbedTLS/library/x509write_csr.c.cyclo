@@ -1,0 +1,11 @@
+F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/mbedTLS/library/x509write_csr.c:47:6:mbedtls_x509write_csr_init	1
+F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/mbedTLS/library/x509write_csr.c:52:6:mbedtls_x509write_csr_free	1
+F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/mbedTLS/library/x509write_csr.c:60:6:mbedtls_x509write_csr_set_md_alg	1
+F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/mbedTLS/library/x509write_csr.c:65:6:mbedtls_x509write_csr_set_key	1
+F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/mbedTLS/library/x509write_csr.c:70:5:mbedtls_x509write_csr_set_subject_name	1
+F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/mbedTLS/library/x509write_csr.c:76:5:mbedtls_x509write_csr_set_extension	1
+F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/mbedTLS/library/x509write_csr.c:84:15:csr_get_unused_bits_for_named_bitstring	3
+F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/mbedTLS/library/x509write_csr.c:97:5:mbedtls_x509write_csr_set_key_usage	5
+F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/mbedTLS/library/x509write_csr.c:123:5:mbedtls_x509write_csr_set_ns_cert_type	5
+F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/mbedTLS/library/x509write_csr.c:153:5:mbedtls_x509write_csr_der	25
+F:/VS_STM32_temp/CNR-ICU-0.2/Middlewares/Third_Party/mbedTLS/library/x509write_csr.c:265:5:mbedtls_x509write_csr_pem	3

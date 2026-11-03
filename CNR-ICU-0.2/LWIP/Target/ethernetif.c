@@ -1,0 +1,1781 @@
+/* USER CODE BEGIN Header */
+/**
+  ******************************************************************************
+  * File Name          : ethernetif.c
+  * Description        : This file provides code for the configuration
+  *                      of the ethernetif.c MiddleWare.
+  ******************************************************************************
+  * @attention
+  *
+  * Copyright (c) 2026 STMicroelectronics.
+  * All rights reserved.
+  *
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
+  *
+  ******************************************************************************
+  */
+/* USER CODE END Header */
+
+/* Includes ------------------------------------------------------------------*/
+#include "main.h"
+#include "lwip/opt.h"
+#include "lwip/timeouts.h"
+#include "netif/ethernet.h"
+#include "netif/etharp.h"
+#include "lwip/ethip6.h"
+#include "ethernetif.h"
+#include "lan8742.h"
+#include <string.h>
+#include "cmsis_os.h"
+#include "lwip/tcpip.h"
+
+/* Within 'USER CODE' section, code will be kept by default at each generation */
+/* USER CODE BEGIN 0 */
+
+/* ============================================================================
+ * READ THIS BEFORE DEBUGGING TRANSMIT OR RECEIVE.        Added 06-08-2026.
+ * ============================================================================
+ * low_level_output() and ethernetif_input() further down this file are STOCK
+ * CubeMX-generated code and are DEAD AT RUNTIME. Do not debug them, and do not
+ * fix bugs in them - the fix would be lost at the next code generation, which
+ * is exactly the trap this arrangement exists to escape.
+ *
+ * The functions actually driving the wire are:
+ *     eth_tx_output()   in USER CODE 6, near the bottom of this file
+ *     eth_rx_input()    in USER CODE 6, near the bottom of this file
+ *
+ * They are installed over the generated ones by LWIP/App/lwip.c, inside its
+ * USER CODE 3 block, right after netif_add():
+ *     gnetif.linkoutput = eth_tx_output;
+ *     gnetif.input      = eth_rx_input;
+ *
+ * WHY. The four transmit fixes this board needs (pbuf-chain linearisation,
+ * D-cache clean before DMA, checking HAL_ETH_Transmit()'s return value, and
+ * HAL_ETH_ReleaseTxPacket() to stop the descriptor ring jamming after four
+ * frames) originally lived as edits inside the generated functions. They sat
+ * outside any USER CODE marker, so STM32CubeMX discarded them silently - twice
+ * on 05-08-2026 - each time yielding firmware that built without a warning and
+ * then failed on the wire with nothing logged. Everything now lives inside
+ * USER CODE markers and survives regeneration.
+ *
+ * The generated low_level_output() is deliberately left byte-identical to what
+ * CubeMX emits, so a regeneration produces a zero diff there and this file
+ * stays easy to re-merge.
+ * ==========================================================================
+ * INTERRUPT-DRIVEN VARIANT.   HTTP_Server_H753_ISR_V00, 06-08-2026.
+ * ==========================================================================
+ * This project is the ISR conversion of HTTP_Server_H753_V00. Note first that
+ * the peripheral was ALREADY in interrupt mode before the conversion: CubeMX
+ * generates HAL_ETH_Start_IT() in ethernet_link_check_state() (not
+ * HAL_ETH_Start()), which unmasks NIE|RIE|TIE|FBEE|AIE|RBUE, and NVIC.ETH_IRQn
+ * was already enabled in the .ioc so ETH_IRQHandler() already existed. The
+ * interrupts simply landed in the HAL's __weak callbacks and did nothing. The
+ * .ioc therefore needed NO changes - verified by diffing the polled and ISR echo
+ * projects, which are byte-identical at 9489 bytes.
+ *
+ * What the conversion actually changed:
+ *   1. RECEIVE is now event-driven. HAL_ETH_RxCpltCallback() (USER CODE 8) sets
+ *      eth_rx_pending; the superloop in main.c only calls ethernetif_input()
+ *      when that flag is set. ethernetif_input() itself is left STOCK - the gate
+ *      lives in main.c USER CODE, not patched into the generated function.
+ *   2. TRANSMIT uses HAL_ETH_Transmit_IT() instead of the blocking
+ *      HAL_ETH_Transmit(). This FLIPS PBUF OWNERSHIP: eth_tx_output() must now
+ *      pbuf_ref() the chain because the DMA still reads it after the call
+ *      returns, and HAL_ETH_TxFreeCallback() performs the matching pbuf_free().
+ *      In the polled build that same free would have been a DOUBLE FREE. The two
+ *      halves cannot be converted independently.
+ *   3. HAL_ETH_ReleaseTxPacket() moved OUT of eth_tx_output()'s success path and
+ *      into the superloop, gated on eth_tx_done_pending. It must never run in
+ *      ISR context because it reaches pbuf_free(), and lwIP has no locking with
+ *      NO_SYS=1.
+ *   4. Descriptor rings grew: ETH_RX_DESC_CNT 4->16, ETH_TX_DESC_CNT 4->24 and
+ *      ETH_RX_BUFFER_CNT 12->32. Measured, not guessed - see the budget and the
+ *      rbu=93/rx=139 stall dump quoted in stm32h7xx_hal_conf.h.
+ *      ALL THREE ARE SET FROM THE .ioc and are regeneration-proof:
+ *        ETH  -> Parameter Settings -> Rx/Tx Descriptor Length   (16 / 24)
+ *        LWIP -> Key Options -> ETH_RX_BUFFER_CNT                (32)
+ *   5. Rx descriptor IOC bits are re-armed on link-up in
+ *      ethernet_link_check_state(), or the board goes permanently deaf after the
+ *      first cable flap. THIS is the one that is not regeneration-proof, because
+ *      it must run between HAL_ETH_Stop_IT() and HAL_ETH_Start_IT() and CubeMX
+ *      offers no marker there. A 250 ms watchdog in main.c limits the damage to
+ *      a hiccup if it is ever lost.
+ *
+ * ISR RULE: the three callbacks in USER CODE 8 touch nothing but volatile flags
+ * and counters. No lwIP call, no pbuf operation, no printf, ever.
+ * ========================================================================= */
+
+/* USER CODE END 0 */
+
+/* Private define ------------------------------------------------------------*/
+/* The time to block waiting for input. */
+#define TIME_WAITING_FOR_INPUT ( osWaitForever )
+/* Time to block waiting for transmissions to finish */
+#define ETHIF_TX_TIMEOUT (2000U)
+/* USER CODE BEGIN OS_THREAD_STACK_SIZE_WITH_RTOS */
+/* Stack size of the interface thread */
+/* 4096 BYTES, raised from 350 on 07-08-2026 - THIS IS THE HARDFAULT FIX.
+ *
+ * osThreadAttr_t.stack_size is in BYTES under CMSIS-RTOS2. The 350 CubeMX emits
+ * is a leftover from CMSIS-RTOS v1, where the field counted WORDS and 350 meant
+ * 1400 bytes. Carried into an RTOS2 project it silently becomes 350 BYTES, which
+ * cannot hold the call chain
+ *     ethernetif_input() -> low_level_input() -> HAL_ETH_ReadData() -> tcpip_input()
+ * The thread overflows the moment the PHY link comes up and real frames start
+ * arriving, smashing whatever sits next to it in ucHeap - typically a
+ * neighbouring TCB.
+ *
+ * OBSERVED SYMPTOM (07-08-2026): HardFault inside xTaskResumeAll(), reached from
+ * ethernetif_input() -> osSemaphoreAcquire() -> xQueueSemaphoreTake(). The
+ * FreeRTOS Task List showed a corrupted TCB above the real ones, with name
+ * "\005\022\210\206KUay...", priority "N/A/455946584" and Start of Stack
+ * 0x1601702c - not a valid RAM address. The scheduler faulted while walking a
+ * task list containing that wreckage. The fault location is a consequence, not
+ * the cause; nothing is wrong with xTaskResumeAll().
+ *
+ * Diagnosed once already in TCP_Server_H753_RTOS__ES_V00 on 29-07-2026, where it
+ * presented as repeating "STACK OVERFLOW in task: EthIf" resets instead.
+ *
+ * Both this file and the .ioc are regenerated territory, so CubeMX will put 350
+ * back if this USER CODE block is ever lost. It is inside
+ * OS_THREAD_STACK_SIZE_WITH_RTOS, so it survives normal regeneration. */
+#define INTERFACE_THREAD_STACK_SIZE ( 4096 )
+
+/* How long eth_tx_output() may wait for a Tx descriptor to free up when the ring
+   is full of in-flight frames. Added 07-08-2026.
+
+   Deliberately NOT ETHIF_TX_TIMEOUT (2000 ms). That wait happens on
+   tcpip_thread, so its duration is a stall of the ENTIRE lwIP stack - every
+   connection and every timer - not just of the frame being sent. 2000 ms is
+   indistinguishable from a hung server and is what dropped 27 of 200 keep-alive
+   requests on 07-08-2026.
+
+   20 ms is generous for the condition it covers: a full 1514-byte frame clears
+   the wire in ~123 us at 100 Mbit, so 20 ms is over 150 frame times. Beyond that
+   the honest answer is ERR_MEM, letting TCP retransmit and back off. */
+#define ETH_TX_BUSY_WAIT_MS ( 20U )
+/* USER CODE END OS_THREAD_STACK_SIZE_WITH_RTOS */
+/* Network interface name */
+#define IFNAME0 's'
+#define IFNAME1 't'
+
+/* ETH Setting  */
+#define ETH_DMA_TRANSMIT_TIMEOUT               ( 20U )
+#define ETH_TX_BUFFER_MAX             ((ETH_TX_DESC_CNT) * 2U)
+/* ETH_RX_BUFFER_SIZE parameter is defined in lwipopts.h */
+
+/* USER CODE BEGIN 1 */
+
+/* USER CODE END 1 */
+
+/* Private variables ---------------------------------------------------------*/
+/*
+@Note: This interface is implemented to operate in zero-copy mode only:
+        - Rx Buffers will be allocated from LwIP stack Rx memory pool,
+          then passed to ETH HAL driver.
+        - Tx Buffers will be allocated from LwIP stack memory heap,
+          then passed to ETH HAL driver.
+
+@Notes:
+  1.a. ETH DMA Rx descriptors must be contiguous, the default count is 4,
+       to customize it please redefine ETH_RX_DESC_CNT in ETH GUI (Rx Descriptor Length)
+       so that updated value will be generated in stm32xxxx_hal_conf.h
+  1.b. ETH DMA Tx descriptors must be contiguous, the default count is 4,
+       to customize it please redefine ETH_TX_DESC_CNT in ETH GUI (Tx Descriptor Length)
+       so that updated value will be generated in stm32xxxx_hal_conf.h
+
+  2.a. Rx Buffers number must be between ETH_RX_DESC_CNT and 2*ETH_RX_DESC_CNT
+  2.b. Rx Buffers must have the same size: ETH_RX_BUFFER_SIZE, this value must
+       passed to ETH DMA in the init field (heth.Init.RxBuffLen)
+  2.c  The RX Ruffers addresses and sizes must be properly defined to be aligned
+       to L1-CACHE line size (32 bytes).
+*/
+
+/* Data Type Definitions */
+typedef enum
+{
+  RX_ALLOC_OK       = 0x00,
+  RX_ALLOC_ERROR    = 0x01
+} RxAllocStatusTypeDef;
+
+typedef struct
+{
+  struct pbuf_custom pbuf_custom;
+  uint8_t buff[(ETH_RX_BUFFER_SIZE + 31) & ~31] __ALIGNED(32);
+} RxBuff_t;
+
+/* Memory Pool Declaration */
+#define ETH_RX_BUFFER_CNT             32U
+LWIP_MEMPOOL_DECLARE(RX_POOL, ETH_RX_BUFFER_CNT, sizeof(RxBuff_t), "Zero-copy RX PBUF pool");
+
+/* Variable Definitions */
+static uint8_t RxAllocStatus;
+#if defined ( __ICCARM__ ) /*!< IAR Compiler */
+
+#pragma location=0x30000000
+ETH_DMADescTypeDef  DMARxDscrTab[ETH_RX_DESC_CNT]; /* Ethernet Rx DMA Descriptors */
+#pragma location=0x30000080
+ETH_DMADescTypeDef  DMATxDscrTab[ETH_TX_DESC_CNT]; /* Ethernet Tx DMA Descriptors */
+
+#elif defined ( __CC_ARM )  /* MDK ARM Compiler */
+
+__attribute__((at(0x30000000))) ETH_DMADescTypeDef  DMARxDscrTab[ETH_RX_DESC_CNT]; /* Ethernet Rx DMA Descriptors */
+__attribute__((at(0x30000080))) ETH_DMADescTypeDef  DMATxDscrTab[ETH_TX_DESC_CNT]; /* Ethernet Tx DMA Descriptors */
+
+#elif (defined ( __GNUC__ ) || defined ( __ARMCC_VERSION )) /* GNU Compiler */
+
+ETH_DMADescTypeDef DMARxDscrTab[ETH_RX_DESC_CNT] __attribute__((section(".RxDescripSection"))); /* Ethernet Rx DMA Descriptors */
+ETH_DMADescTypeDef DMATxDscrTab[ETH_TX_DESC_CNT] __attribute__((section(".TxDescripSection")));   /* Ethernet Tx DMA Descriptors */
+
+#endif
+
+#if defined ( __ICCARM__ ) /*!< IAR Compiler */
+#pragma location = 0x30000100
+extern u8_t memp_memory_RX_POOL_base[];
+
+#elif defined (__ARMCC_VERSION) /* MDK ARM Compiler */
+__attribute__((section(".Rx_PoolSection"))) u8_t memp_memory_RX_POOL_base[];
+
+#elif defined ( __GNUC__ ) /* GNU */
+__attribute__((section(".Rx_PoolSection"))) extern u8_t memp_memory_RX_POOL_base[];
+#endif
+
+/* USER CODE BEGIN 2 */
+/* Set to 1 at the very end of low_level_init(). Because the LAN8742_Init()
+   failure path above returns EARLY and silently, reaching the end of that
+   function is proof the PHY was actually found over MDIO. main() prints this
+   after BSP_COM_Init(), since low_level_init() itself runs before the UART
+   exists and anything it printed would be lost.
+   0 = PHY never detected (MDIO problem); 1 = PHY detected. */
+volatile uint8_t eth_phy_detected = 0;
+
+/* Frame counters, incremented from the two HAL callbacks below and printed by
+   main(). Added 30-07-2026 to split a single symptom - "PC ARPs for us and
+   gets no reply" - into its two possible causes, which need completely
+   different fixes:
+     rx > 0, tx == 0  -> we receive but cannot transmit (RMII TX path, or the
+                         MAC/DMA never actually started)
+     rx == 0          -> we receive nothing at all (RMII RX path or a missing
+                         50 MHz REF_CLK on PA1), even though MDIO works and
+                         the PHY reports link up - both of those are
+                         PHY-internal and do not need REF_CLK. */
+volatile uint32_t eth_rx_frames = 0;
+
+/* NOTE: eth_tx_frames counts HAL_ETH_TxFreeCallback invocations, which happen
+   only via HAL_ETH_ReleaseTxPacket(). Corrected 06-08-2026: this comment used
+   to claim nothing ever called that, which stopped being true once the release
+   was added to the transmit path - eth_tx_output() in USER CODE 6 calls it on
+   every successful send, so this counter now tracks eth_tx_ok closely.
+   It remains the less useful of the two: HAL_ETH_Transmit() is BLOCKING, so by
+   the time it returns the DMA is already done and the callback adds no
+   information. The eth_tx_* counters below are still the meaningful ones. */
+volatile uint32_t eth_tx_frames = 0;
+
+/* Transmit instrumentation, added 30-07-2026. low_level_output() as generated
+   by CubeMX discards HAL_ETH_Transmit()'s return value and unconditionally
+   returns ERR_OK, so a total transmit failure is invisible to both lwIP and
+   the console. These capture what actually happened. */
+volatile uint32_t eth_tx_calls    = 0;  /* times lwIP asked us to send      */
+volatile uint32_t eth_tx_ok       = 0;  /* HAL_ETH_Transmit returned HAL_OK */
+volatile uint32_t eth_tx_fail     = 0;  /* ... returned anything else       */
+
+/* ---- Transmit pbuf-chain accounting, added 05-08-2026 ----------------------
+   Ported from TCP_Server_H753_ISR_V00, where these counters identified the root
+   cause of intermittent permanent data loss under pipelined traffic. See FIX 1
+   of 4 in eth_tx_output(), in USER CODE 6 near the bottom of this file - NOT in
+   the generated low_level_output(), which is dead at runtime (see USER CODE 0).
+     eth_tx_chain_max   longest pbuf chain ever handed to low_level_output()
+     eth_tx_chain_over  chains that exceeded ETH_TX_DESC_CNT - each one used to
+                        be a silently discarded frame
+     eth_tx_clone_fail  linearising clone could not be allocated
+     eth_tx_toolong     still too long after cloning (must stay 0) */
+volatile uint32_t eth_tx_chain_max  = 0;
+volatile uint32_t eth_tx_chain_over = 0;
+
+/* How many times eth_tx_output() had to wait on TxPktSemaphore because the Tx
+   ring was full of frames STILL IN FLIGHT, even after the unconditional
+   HAL_ETH_ReleaseTxPacket() at the top of the transmit block.
+
+   Added 07-08-2026. Expected value is 0, or a small number under sustained
+   line-rate load. A climbing figure means the DMA cannot drain as fast as lwIP
+   is queueing, and since that wait blocks tcpip_thread it is the first thing to
+   check if latency spikes return. Before the proactive reclaim was added this
+   path was hit constantly and cost up to ETHIF_TX_TIMEOUT (2000 ms) each time. */
+volatile uint32_t eth_tx_busy_wait = 0;
+
+/* HOW LONG that wait actually took, added 12-08-2026. eth_tx_busy_wait above
+   counts how many times the wait was ENTERED, not its duration, so it cannot
+   distinguish a 20 us wait from a 20 ms one - and only the duration matters for
+   latency.
+
+   This is being measured because the observed RTT maximum sits at 13-17 ms in
+   every run, and ETH_TX_BUSY_WAIT_MS is 20 ms. A wait bounded at 20 ms that
+   blocks tcpip_thread would produce maxima exactly there. The comment on
+   eth_tx_busy_wait already named this as "the first thing to check if latency
+   spikes return"; these two counters are what makes that checkable.
+
+   Microseconds, converted with lat_cyc_per_us from Core/Src/http_server.c, which
+   is 0 until lat_init() runs - hence the guard at the measurement site. */
+volatile uint32_t eth_tx_wait_us_max   = 0;  /* longest single Tx-descriptor wait */
+volatile uint32_t eth_tx_wait_us_last  = 0;
+volatile uint32_t eth_tx_wait_over1ms  = 0;  /* waits longer than 1 ms            */
+volatile uint32_t eth_tx_wait_over10ms = 0;  /* waits longer than 10 ms           */
+extern volatile uint32_t lat_cyc_per_us;
+
+/* ==========================================================================
+ * FULL BOARD-WINDOW DECOMPOSITION.  Added 12-08-2026.
+ * ==========================================================================
+ * WHY. A wire capture proved the 13-17 ms RTT maximum is board-side. DWT
+ * instrumentation then showed the APPLICATION window (httpd_post_begin ->
+ * response served) is only 18 us, and the Tx-descriptor wait above never fires
+ * (busy_wait = 0 over 1016 frames). So the time is in one of the regions between
+ * those two, none of which had ever been measured:
+ *
+ *   ETH RX ISR ---1--> ethernetif_input ---2--> httpd_post_begin
+ *                      (netif->input)           |
+ *                                               | 3 = 18 us, already measured
+ *                                               v
+ *   eth_tx_output <---4--- fs_open_custom returns the response
+ *
+ *   1  lat_rx_sched_us   ISR to netif->input: RxPktSemaphore release, the input
+ *                        task being scheduled, and low_level_input()/HAL_ETH_ReadData
+ *   2  lat_rx2app_us     netif->input to post_begin: the tcpip_thread mailbox
+ *                        hop, mbedTLS record DECRYPT, and httpd header parsing
+ *   4  lat_serve2tx_us   response to the wire: mbedTLS record ENCRYPT,
+ *                        altcp_write, tcp_output, and entry to eth_tx_output
+ *
+ * 1 + 2 + 3 + 4 should account for essentially the whole wire RTT. Whichever
+ * segment reaches 13-17 ms is the answer; if none does, the delay is in a place
+ * this decomposition does not cover and that itself is informative.
+ *
+ * ON CORRECT ATTRIBUTION. eth_rx_input_cyc is overwritten by EVERY received
+ * frame, including bare ACKs - which is correct here, because the frame
+ * immediately preceding post_begin is by definition the request that triggered
+ * it. The transmit side cannot rely on ordering the same way, since ACKs are also
+ * transmitted, so lat_tx_pending gates segment 4 to the frame that actually
+ * follows a served response.
+ * ======================================================================== */
+volatile uint32_t eth_rx_isr_cyc      = 0;   /* CYCCNT at the RX ISR            */
+volatile uint32_t eth_rx_input_cyc    = 0;   /* CYCCNT at netif->input()        */
+volatile uint32_t lat_rx_sched_us_max = 0;   /* segment 1 worst case            */
+volatile uint32_t lat_serve2tx_us_max = 0;   /* segment 4 worst case            */
+volatile uint32_t lat_rx_sched_over1ms  = 0;
+volatile uint32_t lat_rx_sched_over5ms  = 0;
+volatile uint32_t lat_rx_sched_over10ms = 0;
+volatile uint32_t lat_rx_sched_bogus    = 0;  /* rejected as implausible - see below */
+volatile uint32_t lat_serve2tx_over1ms  = 0;
+
+/* WHY SEGMENT 1 NEEDS A PLAUSIBILITY BOUND.  Added 12-08-2026 after it reported
+ * 180.995 ms - larger than the 17.002 ms total RTT of the same run, so certainly
+ * an artefact rather than a stall.
+ *
+ * DWT->CYCCNT is 32 bits and the core runs at 450 MHz, so it wraps every
+ *     2^32 / 450e6 = 9.5443 s
+ * The unsigned subtraction handles ONE wrap correctly, but not more, and it cannot
+ * tell one wrap from none. A gap of 9.7253 s therefore reads as 181 ms - which is
+ * exactly the figure observed, twice, including once after a counter reset.
+ *
+ * Such a gap arises when eth_rx_isr_fresh is set by an interrupt whose frame is
+ * not yet retrievable by low_level_input(), leaving the flag set across a long
+ * idle period until some later frame consumes it.
+ *
+ * Anything at or beyond this bound is therefore a stale pairing, not a measurement.
+ * 50 ms is far above any credible stall on this board - the whole RTT maximum is
+ * 17 ms - and far below one wrap, so it separates the two cleanly. Rejections are
+ * counted rather than discarded silently: a large lat_rx_sched_bogus would mean
+ * this pairing scheme is unsound and the segment-1 figure should not be trusted. */
+#define LAT_RX_SCHED_SANE_US  ( 50000U )
+volatile uint8_t  lat_tx_pending      = 0;   /* a served response is in flight  */
+extern volatile uint32_t lat_serve_cyc;      /* set by Core/Src/http_server.c   */
+
+/* Segment 1 is only meaningful when the frame being handed up actually came from
+   a receive-complete interrupt. THREE separate sites release RxPktSemaphore:
+
+     HAL_ETH_RxCpltCallback()   a frame arrived           <- timestamps
+     HAL_ETH_ErrorCallback()    ETH_DMACSR_RBU recovery   <- does NOT
+     pbuf_free_custom()         RX pool exhaustion lifted <- does NOT
+
+   Frames drained after either of the latter two were being measured against a
+   stale eth_rx_isr_cyc, which is why segment 1 first reported 190 ms - larger
+   than the entire 12.8 ms RTT maximum, so plainly an artefact. This flag confines
+   the measurement to genuine receive-complete frames. Added 12-08-2026. */
+volatile uint8_t  eth_rx_isr_fresh    = 0;
+
+/* THE TWO PATHS THAT WERE COMPLETELY INVISIBLE until 12-08-2026, and are prime
+   suspects for the 13-17 ms maximum because both stall reception:
+
+     eth_rbu_events      ETH_DMACSR_RBU - Receive Buffer Unavailable. The Rx DMA
+                         had no free descriptor, so it SUSPENDS reception until
+                         the descriptors are rebuilt. Whatever that takes is added
+                         to the latency of the frame that could not be delivered.
+     eth_rx_alloc_fail   LWIP_MEMPOOL_ALLOC(RX_POOL) returned NULL, i.e. the
+                         zero-copy Rx pbuf pool ran dry. This is what leads to RBU.
+     eth_rx_pool_recover pbuf_free_custom() freeing a pbuf and lifting the above.
+
+   ETH_RX_DESC_CNT is 16 and the pool is ETH_RX_BUFFER_CNT deep; if these counters
+   climb during a run, the pool is undersized for the traffic. */
+volatile uint32_t eth_rbu_events      = 0;
+volatile uint32_t eth_rx_alloc_fail   = 0;
+volatile uint32_t eth_rx_pool_recover = 0;
+
+volatile uint32_t eth_tx_clone_fail = 0;
+volatile uint32_t eth_tx_toolong    = 0;
+volatile uint32_t eth_tx_err_code = 0;  /* heth.ErrorCode after a failure   */
+volatile uint32_t eth_tx_dma_err  = 0;  /* heth.DMAErrorCode after failure  */
+volatile uint32_t eth_tx_gstate   = 0;  /* heth.gState at the failure       */
+
+/* --- DEAD UNDER FreeRTOS.  Retained only as documentation, 07-08-2026. ------
+   These seven belonged to the bare-metal flag-gated receive path in
+   HTTP_Server_H753_ISR_V00. With NO_SYS=0 NOTHING WRITES ANY OF THEM:
+     - the three ETH callbacks that set them were CubeMX-generated duplicates
+       and have been deleted from USER CODE 8 (see the note there);
+     - the generated RTOS callbacks release RxPktSemaphore / TxPktSemaphore;
+     - ethernetif_input() is now a realtime thread blocking on that semaphore,
+       not a function polled from a superloop, so there is no drain to count.
+
+   They are deliberately NOT deleted, because the ISR project is the direct
+   ancestor of this one and a future reader comparing the two files needs to see
+   why they vanished rather than find them silently absent. main.c's externs for
+   them HAVE been removed - reading a permanently-zero counter is worse than not
+   having it.
+
+   Do not wire these back up. For receive instrumentation under RTOS, count
+   inside eth_rx_input() below, which runs on tcpip_thread and can safely touch
+   lwIP. --- */
+volatile uint8_t  eth_rx_pending      = 0;  /* DEAD - never written */
+volatile uint8_t  eth_tx_done_pending = 0;  /* DEAD - never written */
+
+volatile uint32_t eth_rx_isr       = 0;  /* DEAD - never written */
+volatile uint32_t eth_tx_isr       = 0;  /* DEAD - never written */
+volatile uint32_t eth_err_isr      = 0;  /* DEAD - never written */
+volatile uint32_t eth_rbu_isr      = 0;  /* DEAD - never written */
+volatile uint32_t eth_rx_drain_max = 0;  /* DEAD - never written */
+
+/* Result of handing received pbufs to lwIP via netif->input(). If frames are
+   arriving but lwIP rejects them, the error code says why. */
+volatile uint32_t eth_input_calls    = 0;
+volatile uint32_t eth_input_err      = 0;
+volatile int32_t  eth_input_last_err = 0;
+
+/* ARP accounting. eth_arp_for_us is the decisive number: it counts ARP frames
+   whose TARGET protocol address equals this interface's own IP. If it stays 0
+   while the PC claims 192.168.1.10 is unreachable, then nothing on the network
+   ever asked about us, and lwIP's silence is correct rather than a fault. */
+extern struct netif gnetif;              /* defined in LWIP/App/lwip.c */
+volatile uint32_t eth_arp_rx     = 0;
+volatile uint32_t eth_arp_for_us = 0;
+/* USER CODE END 2 */
+
+osSemaphoreId_t RxPktSemaphore = NULL;   /* Semaphore to signal incoming packets */
+osSemaphoreId_t TxPktSemaphore = NULL;   /* Semaphore to signal transmit packet complete */
+
+/* Global Ethernet handle */
+ETH_HandleTypeDef heth;
+
+/* Private function prototypes -----------------------------------------------*/
+int32_t ETH_PHY_IO_Init(void);
+int32_t ETH_PHY_IO_DeInit (void);
+int32_t ETH_PHY_IO_ReadReg(uint32_t DevAddr, uint32_t RegAddr, uint32_t *pRegVal);
+int32_t ETH_PHY_IO_WriteReg(uint32_t DevAddr, uint32_t RegAddr, uint32_t RegVal);
+int32_t ETH_PHY_IO_GetTick(void);
+
+lan8742_Object_t LAN8742;
+lan8742_IOCtx_t  LAN8742_IOCtx = {ETH_PHY_IO_Init,
+                                  ETH_PHY_IO_DeInit,
+                                  ETH_PHY_IO_WriteReg,
+                                  ETH_PHY_IO_ReadReg,
+                                  ETH_PHY_IO_GetTick};
+
+/* USER CODE BEGIN 3 */
+
+/* USER CODE END 3 */
+
+/* Private functions ---------------------------------------------------------*/
+void pbuf_free_custom(struct pbuf *p);
+
+/**
+  * @brief  Ethernet Rx Transfer completed callback
+  * @param  handlerEth: ETH handler
+  * @retval None
+  */
+void HAL_ETH_RxCpltCallback(ETH_HandleTypeDef *handlerEth)
+{
+  osSemaphoreRelease(RxPktSemaphore);
+}
+/**
+  * @brief  Ethernet Tx Transfer completed callback
+  * @param  handlerEth: ETH handler
+  * @retval None
+  */
+void HAL_ETH_TxCpltCallback(ETH_HandleTypeDef *handlerEth)
+{
+  osSemaphoreRelease(TxPktSemaphore);
+}
+/**
+  * @brief  Ethernet DMA transfer error callback
+  * @param  handlerEth: ETH handler
+  * @retval None
+  */
+void HAL_ETH_ErrorCallback(ETH_HandleTypeDef *handlerEth)
+{
+  if((HAL_ETH_GetDMAError(handlerEth) & ETH_DMACSR_RBU) == ETH_DMACSR_RBU)
+  {
+     osSemaphoreRelease(RxPktSemaphore);
+  }
+}
+
+/* USER CODE BEGIN 4 */
+
+/* USER CODE END 4 */
+
+/*******************************************************************************
+                       LL Driver Interface ( LwIP stack --> ETH)
+*******************************************************************************/
+/**
+ * @brief In this function, the hardware should be initialized.
+ * Called from ethernetif_init().
+ *
+ * @param netif the already initialized lwip network interface structure
+ *        for this ethernetif
+ */
+static void low_level_init(struct netif *netif)
+{
+  HAL_StatusTypeDef hal_eth_init_status = HAL_OK;
+/* USER CODE BEGIN OS_THREAD_ATTR_CMSIS_RTOS_V2 */
+  osThreadAttr_t attributes;
+/* USER CODE END OS_THREAD_ATTR_CMSIS_RTOS_V2 */
+  uint32_t duplex, speed = 0;
+  int32_t PHYLinkState = 0;
+  ETH_MACConfigTypeDef MACConf = {0};
+  /* Start ETH HAL Init */
+
+   uint8_t MACAddr[6] ;
+  heth.Instance = ETH;
+  MACAddr[0] = 0x00;
+  MACAddr[1] = 0x80;
+  MACAddr[2] = 0xE1;
+  MACAddr[3] = 0x00;
+  MACAddr[4] = 0x00;
+  MACAddr[5] = 0x00;
+  heth.Init.MACAddr = &MACAddr[0];
+  heth.Init.MediaInterface = HAL_ETH_RMII_MODE;
+  heth.Init.TxDesc = DMATxDscrTab;
+  heth.Init.RxDesc = DMARxDscrTab;
+  heth.Init.RxBuffLen = 1536;
+
+  /* USER CODE BEGIN MACADDRESS */
+
+  /* USER CODE END MACADDRESS */
+
+  hal_eth_init_status = HAL_ETH_Init(&heth);
+
+  /* End ETH HAL Init */
+
+  /* Initialize the RX POOL */
+  LWIP_MEMPOOL_INIT(RX_POOL);
+
+#if LWIP_ARP || LWIP_ETHERNET
+  /* set MAC hardware address length */
+  netif->hwaddr_len = ETH_HWADDR_LEN;
+
+  /* set MAC hardware address */
+  netif->hwaddr[0] =  heth.Init.MACAddr[0];
+  netif->hwaddr[1] =  heth.Init.MACAddr[1];
+  netif->hwaddr[2] =  heth.Init.MACAddr[2];
+  netif->hwaddr[3] =  heth.Init.MACAddr[3];
+  netif->hwaddr[4] =  heth.Init.MACAddr[4];
+  netif->hwaddr[5] =  heth.Init.MACAddr[5];
+
+  /* maximum transfer unit */
+  netif->mtu = ETH_MAX_PAYLOAD;
+
+  /* Accept broadcast address and ARP traffic */
+  /* don't set NETIF_FLAG_ETHARP if this device is not an ethernet one */
+  #if LWIP_ARP
+    netif->flags |= NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP;
+  #else
+    netif->flags |= NETIF_FLAG_BROADCAST;
+  #endif /* LWIP_ARP */
+
+  /* create a binary semaphore used for informing ethernetif of frame reception */
+  RxPktSemaphore = osSemaphoreNew(1, 0, NULL);
+
+  /* create a binary semaphore used for informing ethernetif of frame transmission */
+  TxPktSemaphore = osSemaphoreNew(1, 0, NULL);
+
+  /* create the task that handles the ETH_MAC */
+/* USER CODE BEGIN OS_THREAD_NEW_CMSIS_RTOS_V2 */
+  memset(&attributes, 0x0, sizeof(osThreadAttr_t));
+  /* Renamed from "EthIf" to "EthInput" on 07-08-2026. Not cosmetic: CubeMX gives
+     this thread the SAME name as the EthIf task in main.c, so the FreeRTOS Task
+     List showed two identical "EthIf" rows and vApplicationStackOverflowHook
+     could not say which one had overflowed. Enlarging the main.c task changes
+     nothing, because the one that overflows is this one. The reference project
+     lost time to exactly this ambiguity before renaming it too. */
+  attributes.name = "EthInput";
+  attributes.stack_size = INTERFACE_THREAD_STACK_SIZE;
+  attributes.priority = osPriorityRealtime;
+  osThreadNew(ethernetif_input, netif, &attributes);
+/* USER CODE END OS_THREAD_NEW_CMSIS_RTOS_V2 */
+
+/* USER CODE BEGIN PHY_PRE_CONFIG */
+
+/* USER CODE END PHY_PRE_CONFIG */
+  /* Set PHY IO functions */
+  LAN8742_RegisterBusIO(&LAN8742, &LAN8742_IOCtx);
+
+  /* Initialize the LAN8742 ETH PHY */
+  if(LAN8742_Init(&LAN8742) != LAN8742_STATUS_OK)
+  {
+    netif_set_link_down(netif);
+    netif_set_down(netif);
+    return;
+  }
+
+  if (hal_eth_init_status == HAL_OK)
+  {
+    PHYLinkState = LAN8742_GetLinkState(&LAN8742);
+
+    /* Get link state */
+    if(PHYLinkState <= LAN8742_STATUS_LINK_DOWN)
+    {
+      netif_set_link_down(netif);
+      netif_set_down(netif);
+    }
+    else
+    {
+      switch (PHYLinkState)
+      {
+      case LAN8742_STATUS_100MBITS_FULLDUPLEX:
+        duplex = ETH_FULLDUPLEX_MODE;
+        speed = ETH_SPEED_100M;
+        break;
+      case LAN8742_STATUS_100MBITS_HALFDUPLEX:
+        duplex = ETH_HALFDUPLEX_MODE;
+        speed = ETH_SPEED_100M;
+        break;
+      case LAN8742_STATUS_10MBITS_FULLDUPLEX:
+        duplex = ETH_FULLDUPLEX_MODE;
+        speed = ETH_SPEED_10M;
+        break;
+      case LAN8742_STATUS_10MBITS_HALFDUPLEX:
+        duplex = ETH_HALFDUPLEX_MODE;
+        speed = ETH_SPEED_10M;
+        break;
+      default:
+        duplex = ETH_FULLDUPLEX_MODE;
+        speed = ETH_SPEED_100M;
+        break;
+      }
+
+    /* Get MAC Config MAC */
+    HAL_ETH_GetMACConfig(&heth, &MACConf);
+    MACConf.DuplexMode = duplex;
+    MACConf.Speed = speed;
+    HAL_ETH_SetMACConfig(&heth, &MACConf);
+
+    HAL_ETH_Start_IT(&heth);
+    netif_set_up(netif);
+    netif_set_link_up(netif);
+/* USER CODE BEGIN PHY_POST_CONFIG */
+
+/* USER CODE END PHY_POST_CONFIG */
+    }
+
+  }
+  else
+  {
+    Error_Handler();
+  }
+#endif /* LWIP_ARP || LWIP_ETHERNET */
+
+/* USER CODE BEGIN LOW_LEVEL_INIT */
+  /* Only reachable if LAN8742_Init() succeeded - the failure branch returns
+     before this point. See the declaration comment on eth_phy_detected. */
+  eth_phy_detected = 1;
+/* USER CODE END LOW_LEVEL_INIT */
+}
+
+/**
+ * @brief This function should do the actual transmission of the packet. The packet is
+ * contained in the pbuf that is passed to the function. This pbuf
+ * might be chained.
+ *
+ * @param netif the lwip network interface structure for this ethernetif
+ * @param p the MAC packet to send (e.g. IP packet including MAC addresses and type)
+ * @return ERR_OK if the packet could be sent
+ *         an err_t value if the packet couldn't be sent
+ *
+ * @note Returning ERR_MEM here if a DMA queue of your MAC is full can lead to
+ *       strange results. You might consider waiting for space in the DMA queue
+ *       to become available since the stack doesn't retry to send a packet
+ *       dropped because of memory failure (except for the TCP timers).
+ */
+
+static err_t low_level_output(struct netif *netif, struct pbuf *p)
+{
+  uint32_t i = 0U;
+  struct pbuf *q = NULL;
+  err_t errval = ERR_OK;
+  ETH_BufferTypeDef Txbuffer[ETH_TX_DESC_CNT] = {0};
+  ETH_TxPacketConfig tx_config;
+
+  memset(Txbuffer, 0 , ETH_TX_DESC_CNT*sizeof(ETH_BufferTypeDef));
+
+  /* Set Tx packet config common parameters */
+  memset(&tx_config, 0 , sizeof(ETH_TxPacketConfig));
+  tx_config.Attributes = ETH_TX_PACKETS_FEATURES_CSUM | ETH_TX_PACKETS_FEATURES_CRCPAD;
+  tx_config.ChecksumCtrl = ETH_CHECKSUM_IPHDR_PAYLOAD_INSERT_PHDR_CALC;
+  tx_config.CRCPadCtrl = ETH_CRC_PAD_INSERT;
+
+  for(q = p; q != NULL; q = q->next)
+  {
+    if(i >= ETH_TX_DESC_CNT)
+      return ERR_IF;
+
+    Txbuffer[i].buffer = q->payload;
+    Txbuffer[i].len = q->len;
+
+    if(i>0)
+    {
+      Txbuffer[i-1].next = &Txbuffer[i];
+    }
+
+    if(q->next == NULL)
+    {
+      Txbuffer[i].next = NULL;
+    }
+
+    i++;
+  }
+
+  tx_config.Length = p->tot_len;
+  tx_config.TxBuffer = Txbuffer;
+  tx_config.pData = p;
+
+  pbuf_ref(p);
+
+  do
+  {
+    if(HAL_ETH_Transmit_IT(&heth, &tx_config) == HAL_OK)
+    {
+      errval = ERR_OK;
+    }
+    else
+    {
+
+      if(HAL_ETH_GetError(&heth) & HAL_ETH_ERROR_BUSY)
+      {
+        /* Wait for descriptors to become available */
+        osSemaphoreAcquire(TxPktSemaphore, ETHIF_TX_TIMEOUT);
+        HAL_ETH_ReleaseTxPacket(&heth);
+        errval = ERR_BUF;
+      }
+      else
+      {
+        /* Other error */
+        pbuf_free(p);
+        errval =  ERR_IF;
+      }
+    }
+  }while(errval == ERR_BUF);
+
+  return errval;
+}
+
+/**
+ * @brief Should allocate a pbuf and transfer the bytes of the incoming
+ * packet from the interface into the pbuf.
+ *
+ * @param netif the lwip network interface structure for this ethernetif
+ * @return a pbuf filled with the received packet (including MAC header)
+ *         NULL on memory error
+   */
+static struct pbuf * low_level_input(struct netif *netif)
+{
+  struct pbuf *p = NULL;
+
+  if(RxAllocStatus == RX_ALLOC_OK)
+  {
+    HAL_ETH_ReadData(&heth, (void **)&p);
+  }
+
+  return p;
+}
+
+/**
+ * @brief This function should be called when a packet is ready to be read
+ * from the interface. It uses the function low_level_input() that
+ * should handle the actual reception of bytes from the network
+ * interface. Then the type of the received packet is determined and
+ * the appropriate input function is called.
+ *
+ * @param netif the lwip network interface structure for this ethernetif
+ */
+void ethernetif_input(void* argument)
+{
+  struct pbuf *p = NULL;
+  struct netif *netif = (struct netif *) argument;
+
+  for( ;; )
+  {
+    if (osSemaphoreAcquire(RxPktSemaphore, TIME_WAITING_FOR_INPUT) == osOK)
+    {
+      do
+      {
+        p = low_level_input( netif );
+        if (p != NULL)
+        {
+          if (netif->input( p, netif) != ERR_OK )
+          {
+            pbuf_free(p);
+          }
+        }
+      } while(p!=NULL);
+    }
+  }
+}
+
+#if !LWIP_ARP
+/**
+ * This function has to be completed by user in case of ARP OFF.
+ *
+ * @param netif the lwip network interface structure for this ethernetif
+ * @return ERR_OK if ...
+ */
+static err_t low_level_output_arp_off(struct netif *netif, struct pbuf *q, const ip4_addr_t *ipaddr)
+{
+  err_t errval;
+  errval = ERR_OK;
+
+/* USER CODE BEGIN 5 */
+
+/* USER CODE END 5 */
+
+  return errval;
+
+}
+#endif /* LWIP_ARP */
+
+/**
+ * @brief Should be called at the beginning of the program to set up the
+ * network interface. It calls the function low_level_init() to do the
+ * actual setup of the hardware.
+ *
+ * This function should be passed as a parameter to netif_add().
+ *
+ * @param netif the lwip network interface structure for this ethernetif
+ * @return ERR_OK if the loopif is initialized
+ *         ERR_MEM if private data couldn't be allocated
+ *         any other err_t on error
+ */
+err_t ethernetif_init(struct netif *netif)
+{
+  LWIP_ASSERT("netif != NULL", (netif != NULL));
+
+#if LWIP_NETIF_HOSTNAME
+  /* Initialize interface hostname */
+  netif->hostname = "lwip";
+#endif /* LWIP_NETIF_HOSTNAME */
+
+  /*
+   * Initialize the snmp variables and counters inside the struct netif.
+   * The last argument should be replaced with your link speed, in units
+   * of bits per second.
+   */
+  // MIB2_INIT_NETIF(netif, snmp_ifType_ethernet_csmacd, LINK_SPEED_OF_YOUR_NETIF_IN_BPS);
+
+  netif->name[0] = IFNAME0;
+  netif->name[1] = IFNAME1;
+  /* We directly use etharp_output() here to save a function call.
+   * You can instead declare your own function an call etharp_output()
+   * from it if you have to do some checks before sending (e.g. if link
+   * is available...) */
+
+#if LWIP_IPV4
+#if LWIP_ARP || LWIP_ETHERNET
+#if LWIP_ARP
+  netif->output = etharp_output;
+#else
+  /* The user should write its own code in low_level_output_arp_off function */
+  netif->output = low_level_output_arp_off;
+#endif /* LWIP_ARP */
+#endif /* LWIP_ARP || LWIP_ETHERNET */
+#endif /* LWIP_IPV4 */
+
+#if LWIP_IPV6
+  netif->output_ip6 = ethip6_output;
+#endif /* LWIP_IPV6 */
+
+  netif->linkoutput = low_level_output;
+
+  /* initialize the hardware */
+  low_level_init(netif);
+
+  return ERR_OK;
+}
+
+/**
+  * @brief  Custom Rx pbuf free callback
+  * @param  pbuf: pbuf to be freed
+  * @retval None
+  */
+void pbuf_free_custom(struct pbuf *p)
+{
+  struct pbuf_custom* custom_pbuf = (struct pbuf_custom*)p;
+  LWIP_MEMPOOL_FREE(RX_POOL, custom_pbuf);
+
+  /* If the Rx Buffer Pool was exhausted, signal the ethernetif_input task to
+   * call HAL_ETH_GetRxDataBuffer to rebuild the Rx descriptors. */
+
+  if (RxAllocStatus == RX_ALLOC_ERROR)
+  {
+    RxAllocStatus = RX_ALLOC_OK;
+    osSemaphoreRelease(RxPktSemaphore);
+  }
+}
+
+/* USER CODE BEGIN 6 */
+
+/**
+* @brief  Returns the current time in milliseconds
+*         when LWIP_TIMERS == 1 and NO_SYS == 1
+* @param  None
+* @retval Current Time value
+*/
+u32_t sys_now(void)
+{
+  return HAL_GetTick();
+}
+
+/* ==========================================================================
+ * THE REAL TRANSMIT AND RECEIVE PATH
+ * ==========================================================================
+ * Moved here 06-08-2026. These two functions used to be hand-patches applied
+ * directly to the CubeMX-generated low_level_output() and ethernetif_input()
+ * further up this file. That worked, but the patches sat OUTSIDE any USER CODE
+ * marker, so code generation silently discarded them - twice on 05-08-2026
+ * alone (18:03 and 18:13), each time leaving a board that passed a build and
+ * then failed on the wire with no error anywhere.
+ *
+ * Both functions now live inside USER CODE 6, and LWIP/App/lwip.c repoints the
+ * netif at them from inside its own USER CODE 3 block, immediately after
+ * netif_add(). Every piece is therefore regeneration-proof. The generated
+ * low_level_output() and ethernetif_input() above are back to their stock form
+ * and are DEAD AT RUNTIME - see the banner in USER CODE 0 at the top of this
+ * file, which exists so a reader does not spend time in the wrong function.
+ *
+ * If transmit ever breaks again after a regeneration, the thing to check is no
+ * longer this code - it is whether lwip.c USER CODE 3 still contains the two
+ * assignments. Nothing else can silently revert.
+ * ========================================================================== */
+
+/**
+  * @brief  Hardened replacement for the generated low_level_output().
+  *         Installed as gnetif.linkoutput by lwip.c (USER CODE 3).
+  * @param  netif: the lwIP network interface (unused, kept for signature match)
+  * @param  p: pbuf chain to transmit; lwIP retains ownership
+  * @retval ERR_OK on success, ERR_MEM for retryable back-pressure, ERR_IF if
+  *         the MAC genuinely refused the frame
+  */
+err_t eth_tx_output(struct netif *netif, struct pbuf *p)
+{
+  uint32_t i = 0U;
+  struct pbuf *q = NULL;
+  err_t errval = ERR_OK;
+
+  /* Segment 4: response served -> frame reaching the transmit path. Gated on
+     lat_tx_pending so a bare ACK, which also comes through here, cannot be
+     mistaken for the response. Covers mbedTLS record encrypt, altcp_write and
+     tcp_output. */
+  if ((lat_tx_pending != 0U) && (lat_cyc_per_us != 0U))
+  {
+    uint32_t us = (DWT->CYCCNT - lat_serve_cyc) / lat_cyc_per_us;
+
+    lat_tx_pending = 0U;
+    if (us > lat_serve2tx_us_max) { lat_serve2tx_us_max = us; }
+    if (us > 1000U)               { lat_serve2tx_over1ms++;   }
+  }
+  ETH_BufferTypeDef Txbuffer[ETH_TX_DESC_CNT] = {0};
+  struct pbuf *tx_p          = p;   /* chain actually handed to the DMA */
+  uint8_t      tx_p_is_clone = 0U;  /* 1 => we own tx_p and must free it */
+
+  /* LOCAL packet config - changed 07-08-2026 for the FreeRTOS port.
+     This used to use the file-scope TxConfig that the NO_SYS=1 template
+     declared once and initialised in low_level_init(). The RTOS template does
+     not declare it at all: it builds a local ETH_TxPacketConfig per call (see
+     tx_config in the generated low_level_output above). Referencing the old
+     global here was an undefined symbol, so the file would not link.
+
+     The three fields below must therefore be set on every call now. They are
+     copied verbatim from the generated version - omitting them would leave
+     Attributes at 0, which disables hardware checksum insertion and CRC/pad,
+     and the peer would silently reject every frame as corrupt. */
+  ETH_TxPacketConfig tx_config;
+
+  LWIP_UNUSED_ARG(netif);
+
+  memset(&tx_config, 0, sizeof(ETH_TxPacketConfig));
+  tx_config.Attributes    = ETH_TX_PACKETS_FEATURES_CSUM | ETH_TX_PACKETS_FEATURES_CRCPAD;
+  tx_config.ChecksumCtrl  = ETH_CHECKSUM_IPHDR_PAYLOAD_INSERT_PHDR_CALC;
+  tx_config.CRCPadCtrl    = ETH_CRC_PAD_INSERT;
+
+  /* ----------------------------------------------------------------------
+   * FIX 1 of 4 - over-long pbuf chains were silently dropped.
+   * Diagnosed 05-08-2026 on TCP_Server_H753_ISR_V00. The generated loop began:
+   *
+   *     for (q = p; q != NULL; q = q->next)
+   *     {
+   *       if (i >= ETH_TX_DESC_CNT)
+   *         return ERR_IF;          <-- frame thrown away, no record kept
+   *
+   * lwIP chains one pbuf per coalesced tcp_write() onto a TCP segment
+   * (tcp_out.c: queuelen += pbuf_clen(concat_p)), so a segment assembled from
+   * many small writes can exceed the 4-entry ring easily. The drop was
+   * invisible because it returned before eth_tx_calls++ and eth_tx_fail++, and
+   * permanent because lwIP retransmits the same chain, which is never shorter.
+   *
+   * THIS MATTERS MORE NOW THAN IT DID FOR THE ECHO SERVER. httpd emits a baked
+   * header pbuf followed by file-data pbufs, so its chains are longer than the
+   * one or two pbufs a lockstep echo produced. The echo test specification
+   * never exercised this path; a passing report was not evidence of absence.
+   *
+   * THE FIX. Never discard. Clone an over-long chain into one contiguous pbuf
+   * and send that. pbuf_clone() allocates from the lwIP heap and copies; it
+   * does not touch the original, so lwIP keeps its own pbuf for retransmission
+   * exactly as it expects.
+   * -------------------------------------------------------------------- */
+  {
+    uint32_t clen = pbuf_clen(p);
+
+    if (clen > eth_tx_chain_max)
+    {
+      eth_tx_chain_max = clen;
+    }
+
+    if (clen > (uint32_t)ETH_TX_DESC_CNT)
+    {
+      struct pbuf *linear;
+
+      eth_tx_chain_over++;
+
+      linear = pbuf_clone(PBUF_RAW, PBUF_RAM, p);
+      if (linear == NULL)
+      {
+        /* Out of lwIP heap. ERR_MEM is retryable back-pressure - and unlike
+           the original ERR_IF, it is counted rather than silent. */
+        eth_tx_clone_fail++;
+        return ERR_MEM;
+      }
+
+      tx_p          = linear;
+      tx_p_is_clone = 1U;
+    }
+  }
+
+  memset(Txbuffer, 0, ETH_TX_DESC_CNT * sizeof(ETH_BufferTypeDef));
+
+  for (q = tx_p; q != NULL; q = q->next)
+  {
+    if (i >= ETH_TX_DESC_CNT)
+    {
+      /* Unreachable: a clone is one contiguous pbuf, and anything shorter than
+         the ring got here without cloning. Kept as a counted safety net so
+         that if it ever does happen it is VISIBLE, not a silent drop. */
+      eth_tx_toolong++;
+      if (tx_p_is_clone != 0U)
+      {
+        pbuf_free(tx_p);
+      }
+      return ERR_MEM;
+    }
+
+    Txbuffer[i].buffer = q->payload;
+    Txbuffer[i].len = q->len;
+
+    if (i > 0)
+    {
+      Txbuffer[i - 1].next = &Txbuffer[i];
+    }
+
+    if (q->next == NULL)
+    {
+      Txbuffer[i].next = NULL;
+    }
+
+    i++;
+  }
+
+  tx_config.Length = tx_p->tot_len;
+  tx_config.TxBuffer = Txbuffer;
+  tx_config.pData = tx_p;
+
+  {
+    HAL_StatusTypeDef tx_status;
+    struct pbuf *cq;
+
+    /* ------------------------------------------------------------------
+     * FIX 2 of 4 - flush Tx payloads out of the D-cache before the DMA reads
+     * them. Required as of 30-07-2026, when LWIP_RAM_HEAP_POINTER was
+     * cancelled in lwipopts.h: the lwIP heap now lives in .bss -> RAM_D1
+     * (0x24000000), which is CACHEABLE and outside the non-cacheable MPU
+     * region covering RAM_D2. Without this the DMA can read stale RAM while
+     * the real bytes sit dirty in cache, and the board transmits nothing a
+     * capture can see.
+     *
+     * Aligning the address down to a 32-byte cache line and extending the
+     * length by the same amount is what keeps a partial line from being
+     * missed - a payload rarely starts on a line boundary.
+     *
+     * Note for HTTP: httpd sends static file data as PBUF_ROM pointing into
+     * FLASH, because HTTP_IS_DATA_VOLATILE(hs) evaluates to 0 when
+     * LWIP_HTTPD_DYNAMIC_FILE_READ is 0. Cleaning a FLASH address here is
+     * harmless - those lines are never dirty - so the loop is left to run
+     * over every pbuf rather than trying to classify them by address.
+     * ---------------------------------------------------------------- */
+    for (cq = tx_p; cq != NULL; cq = cq->next)
+    {
+      uint32_t addr     = (uint32_t)cq->payload;
+      uint32_t misalign = addr & 0x1FUL;
+
+      SCB_CleanDCache_by_Addr((uint32_t *)(addr - misalign),
+                              (int32_t)(cq->len + misalign));
+    }
+
+    /* ------------------------------------------------------------------
+     * FIX 3 of 4 - check the return value. The generated line was simply
+     *     HAL_ETH_Transmit(&heth, &TxConfig, ETH_DMA_TRANSMIT_TIMEOUT);
+     * with the result discarded and ERR_OK returned unconditionally, so lwIP
+     * believed every frame was sent even when none were - which is exactly
+     * the state this board was in on 30-07-2026. Nothing recorded why it
+     * failed either, leaving no way to tell a stopped MAC (gState != STARTED)
+     * from an exhausted descriptor ring (ERROR_BUSY) from a DMA fault from a
+     * 20 ms completion timeout.
+     * ---------------------------------------------------------------- */
+    eth_tx_calls++;
+
+    /* OWNERSHIP - the critical difference from the blocking build.
+       HAL_ETH_Transmit_IT() returns as soon as the descriptors are queued; the
+       DMA is still reading this pbuf afterwards. lwIP meanwhile frees the pbuf
+       the moment we return - etharp_raw() calls pbuf_free(p) on the line right
+       after ethernet_output(). Take a reference so the buffer outlives the DMA;
+       HAL_ETH_TxFreeCallback() drops it once transmit completes.
+       Under blocking HAL_ETH_Transmit() this reference was unnecessary and
+       freeing in TxFreeCallback would have been a DOUBLE FREE - which is
+       exactly why the two halves must be converted together. */
+    if (tx_p_is_clone == 0U)
+    {
+      pbuf_ref(p);
+    }
+    /* else: the clone already carries exactly one reference, which
+       HAL_ETH_TxFreeCallback() consumes. Taking another would leak it. */
+
+    /* ==================================================================
+     * RECLAIM FIRST, EVERY TIME.  Added 07-08-2026 - this is the fix.
+     * ==================================================================
+     * NOTHING ELSE IN THE SYSTEM RECLAIMS Tx DESCRIPTORS. Verified by reading
+     * the HAL: HAL_ETH_Transmit_IT() does not (stm32h7xx_hal_eth.c:1000-1037),
+     * and HAL_ETH_IRQHandler() only invokes HAL_ETH_TxCpltCallback() on
+     * ETH_DMACSR_TI (line 1960-1972) - it never calls
+     * HAL_ETH_ReleaseTxPacket(). A descriptor stays occupied until something
+     * explicitly releases it, because ETH_Prepare_Tx_Descriptors() rejects any
+     * descriptor whose TxDescList.PacketAddress[] slot is still non-NULL.
+     *
+     * Until now the ONLY release was in the BUSY handler below, i.e. lazily,
+     * once the 24-deep ring had completely filled. Two consequences, both
+     * observed on 07-08-2026 with 200 keep-alive POSTs down one socket:
+     *
+     *   1. LATENCY SPIKES TO THE TIMEOUT. When the ring filled and no
+     *      TxPktSemaphore token happened to be available, the wait below ran
+     *      its full duration. Measured: p50 0.48 ms but avg 54 ms and max
+     *      1920 ms against an ETHIF_TX_TIMEOUT of 2000 ms.
+     *   2. THE WHOLE STACK STALLED WITH IT. eth_tx_output() runs on
+     *      tcpip_thread, so that wait froze every connection and every lwIP
+     *      timer, not just this frame. httpd's own retry/poll handling could
+     *      not run, and connections were dropped: 28 reconnects across 200
+     *      requests, 27 outright failures.
+     *
+     * Releasing here instead is cheap and non-blocking - it walks the ring,
+     * frees whatever the DMA has genuinely finished with, and returns. The
+     * BUSY path below becomes what it should always have been: a rare fallback
+     * for a ring that is full of frames still genuinely in flight.
+     *
+     * It also fixes pbuf lifetime. HAL_ETH_ReleaseTxPacket() is what invokes
+     * HAL_ETH_TxFreeCallback(), which is where pbuf_free() happens - so lazy
+     * reclamation meant up to 24 transmitted pbufs sat unfreed in the lwIP
+     * heap (MEM_SIZE 20480) until the ring filled. Now they are returned on
+     * the next transmit. Safe here: we are on tcpip_thread, where touching
+     * lwIP's heap is legal.
+     * ================================================================ */
+    (void)HAL_ETH_ReleaseTxPacket(&heth);
+
+    tx_status = HAL_ETH_Transmit_IT(&heth, &tx_config);
+
+    if (tx_status != HAL_OK)
+    {
+      /* ----------------------------------------------------------------
+       * RTOS BACK-PRESSURE.  Rewritten 07-08-2026 for the FreeRTOS port.
+       *
+       * The ISR build did "HAL_ETH_ReleaseTxPacket(); retry once" here, with
+       * the comment that it must NOT block - true under NO_SYS=1, where there
+       * was no task to suspend and spinning would have stalled the whole stack.
+       *
+       * That constraint is gone. eth_tx_output() now runs on tcpip_thread, so
+       * BLOCKING IS BOTH LEGAL AND CORRECT: waiting on TxPktSemaphore suspends
+       * only the stack thread while the DMA drains, letting the UART tasks and
+       * httpd's own work continue. A bounded wait also handles a genuinely full
+       * ring properly, whereas retry-once just failed sooner.
+       *
+       * Only HAL_ETH_ERROR_BUSY is a "ring full" condition worth waiting on.
+       * Anything else is a real fault and must not be retried - see the else
+       * branch below. This mirrors the generated RTOS low_level_output().
+       * -------------------------------------------------------------- */
+      if ((HAL_ETH_GetError(&heth) & HAL_ETH_ERROR_BUSY) != 0U)
+      {
+        /* Genuinely full of in-flight frames, since the unconditional reclaim
+           above already freed everything the DMA had finished. Wait briefly for
+           the next Tx-complete interrupt, reclaim, and retry once.
+
+           TIMEOUT DELIBERATELY SHORT - 20 ms, not ETHIF_TX_TIMEOUT's 2000 ms.
+           This wait blocks tcpip_thread, so it stalls EVERY connection and every
+           lwIP timer for its duration, not just this frame. A 2 s stall is
+           indistinguishable from a dead stack: it is what dropped 27 of 200
+           requests on 07-08-2026. 20 ms is comfortably longer than the ~123 us a
+           full 1514-byte frame takes to clear at 100 Mbit, so it is generous for
+           the case it exists to cover, while a genuinely wedged DMA now costs a
+           retryable ERR_MEM instead of freezing the server.
+
+           ERR_MEM is the right answer on failure: lwIP retransmits, and TCP's own
+           backoff is a far better congestion response than blocking the stack. */
+        /* Timed, added 12-08-2026 - see eth_tx_wait_us_max. This wait runs on
+           tcpip_thread, so its duration IS the stall the client observes. */
+        {
+          uint32_t t_wait = DWT->CYCCNT;
+
+          (void)osSemaphoreAcquire(TxPktSemaphore, ETH_TX_BUSY_WAIT_MS);
+          eth_tx_busy_wait++;
+
+          if (lat_cyc_per_us != 0U)   /* 0 until lat_init() has run */
+          {
+            uint32_t us = (DWT->CYCCNT - t_wait) / lat_cyc_per_us;
+
+            eth_tx_wait_us_last = us;
+            if (us > eth_tx_wait_us_max) { eth_tx_wait_us_max = us; }
+            if (us > 1000U)  { eth_tx_wait_over1ms++;  }
+            if (us > 10000U) { eth_tx_wait_over10ms++; }
+          }
+        }
+        HAL_ETH_ReleaseTxPacket(&heth);
+        tx_status = HAL_ETH_Transmit_IT(&heth, &tx_config);
+      }
+    }
+
+    if (tx_status == HAL_OK)
+    {
+      eth_tx_ok++;
+      errval = ERR_OK;
+      /* NOTE: no HAL_ETH_ReleaseTxPacket() here any more. The blocking build
+         called it on success because the DMA was already done. Now it is not. */
+    }
+    else
+    {
+      eth_tx_fail++;
+      if (eth_tx_fail == 1U)
+      {
+        eth_tx_err_code = heth.ErrorCode;
+        eth_tx_dma_err  = heth.DMAErrorCode;
+        eth_tx_gstate   = (uint32_t)heth.gState;
+      }
+      /* The HAL never took the packet. Release whichever pbuf we hold: the
+         clone we own outright, or the reference we took on lwIP's pbuf. */
+      pbuf_free(tx_p);
+
+      /* ERR_MEM not ERR_IF: a full ring is transient back-pressure, and ERR_MEM
+         is what makes lwIP retry instead of concluding the interface is dead. */
+      errval = ERR_MEM;
+    }
+  }
+
+  /* RESTORED 06-08-2026. This return was lost when the trailing clone-free block
+     was removed during the interrupt conversion. GCC reports only
+     "control reaches end of non-void function" - a WARNING, not an error - so the
+     build succeeded and the function returned whatever happened to be in r0.
+     lwIP reads that as an err_t, so a non-zero value would make it believe every
+     single transmit had failed: ARP would never complete, TCP would retransmit
+     forever, and nothing would report a fault.
+
+     There is deliberately NO pbuf_free(tx_p) here any more. In the blocking build
+     this is where the linearising clone was released, because HAL_ETH_Transmit()
+     had already finished with it. Under HAL_ETH_Transmit_IT() the DMA is still
+     reading it, so ownership passes to the HAL and HAL_ETH_TxFreeCallback()
+     performs the free; the failure path above frees it because the HAL never
+     took the packet. Reinstating a free here would be a double free. */
+  return errval;
+}
+
+/**
+  * @brief  Counting wrapper around ethernet_input().
+  *         Installed as gnetif.input by lwip.c (USER CODE 3).
+  * @param  p: received pbuf chain
+  * @param  inp: the receiving network interface
+  * @retval whatever ethernet_input() returned, passed through unchanged
+  *
+  * WHY A WRAPPER RATHER THAN A PATCH TO ethernetif_input()
+  * The original edit replaced the generated
+  *     if (netif->input(p, netif) != ERR_OK) { pbuf_free(p); }
+  * with a version that captured the error code into counters and freed the
+  * pbuf itself. Wrapping netif->input instead achieves the same visibility
+  * while leaving that generated line untouched, so ethernetif_input() needs no
+  * patch at all.
+  *
+  * OWNERSHIP: this wrapper must NOT free p on error. The generated
+  * ethernetif_input() still does that, based on the value we return here.
+  * Freeing in both places would be a double free.
+  */
+err_t eth_rx_input(struct pbuf *p, struct netif *inp)
+{
+  err_t in_err = ethernet_input(p, inp);
+
+  eth_input_calls++;
+  if (in_err != ERR_OK)
+  {
+    eth_input_err++;
+    eth_input_last_err = (int32_t)in_err;
+  }
+
+  return in_err;
+}
+
+/* USER CODE END 6 */
+
+/**
+  * @brief  Initializes the ETH MSP.
+  * @param  ethHandle: ETH handle
+  * @retval None
+  */
+
+void HAL_ETH_MspInit(ETH_HandleTypeDef* ethHandle)
+{
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  if(ethHandle->Instance==ETH)
+  {
+  /* USER CODE BEGIN ETH_MspInit 0 */
+
+  /* USER CODE END ETH_MspInit 0 */
+    /* Enable Peripheral clock */
+    __HAL_RCC_ETH1MAC_CLK_ENABLE();
+    __HAL_RCC_ETH1TX_CLK_ENABLE();
+    __HAL_RCC_ETH1RX_CLK_ENABLE();
+
+    __HAL_RCC_GPIOC_CLK_ENABLE();
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+    __HAL_RCC_GPIOG_CLK_ENABLE();
+    /**ETH GPIO Configuration
+    PC1     ------> ETH_MDC
+    PA1     ------> ETH_REF_CLK
+    PA2     ------> ETH_MDIO
+    PA7     ------> ETH_CRS_DV
+    PC4     ------> ETH_RXD0
+    PC5     ------> ETH_RXD1
+    PB13     ------> ETH_TXD1
+    PG11     ------> ETH_TX_EN
+    PG13     ------> ETH_TXD0
+    */
+    GPIO_InitStruct.Pin = GPIO_PIN_1|GPIO_PIN_4|GPIO_PIN_5;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF11_ETH;
+    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Pin = GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_7;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF11_ETH;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Pin = GPIO_PIN_13;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF11_ETH;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Pin = GPIO_PIN_11|GPIO_PIN_13;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF11_ETH;
+    HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
+
+    /* Peripheral interrupt init */
+    HAL_NVIC_SetPriority(ETH_IRQn, 5, 0);
+    HAL_NVIC_EnableIRQ(ETH_IRQn);
+  /* USER CODE BEGIN ETH_MspInit 1 */
+
+  /* USER CODE END ETH_MspInit 1 */
+  }
+}
+
+void HAL_ETH_MspDeInit(ETH_HandleTypeDef* ethHandle)
+{
+  if(ethHandle->Instance==ETH)
+  {
+  /* USER CODE BEGIN ETH_MspDeInit 0 */
+
+  /* USER CODE END ETH_MspDeInit 0 */
+    /* Disable Peripheral clock */
+    __HAL_RCC_ETH1MAC_CLK_DISABLE();
+    __HAL_RCC_ETH1TX_CLK_DISABLE();
+    __HAL_RCC_ETH1RX_CLK_DISABLE();
+
+    /**ETH GPIO Configuration
+    PC1     ------> ETH_MDC
+    PA1     ------> ETH_REF_CLK
+    PA2     ------> ETH_MDIO
+    PA7     ------> ETH_CRS_DV
+    PC4     ------> ETH_RXD0
+    PC5     ------> ETH_RXD1
+    PB13     ------> ETH_TXD1
+    PG11     ------> ETH_TX_EN
+    PG13     ------> ETH_TXD0
+    */
+    HAL_GPIO_DeInit(GPIOC, GPIO_PIN_1|GPIO_PIN_4|GPIO_PIN_5);
+
+    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_7);
+
+    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_13);
+
+    HAL_GPIO_DeInit(GPIOG, GPIO_PIN_11|GPIO_PIN_13);
+
+    /* Peripheral interrupt Deinit*/
+    HAL_NVIC_DisableIRQ(ETH_IRQn);
+
+  /* USER CODE BEGIN ETH_MspDeInit 1 */
+
+  /* USER CODE END ETH_MspDeInit 1 */
+  }
+}
+
+/*******************************************************************************
+                       PHI IO Functions
+*******************************************************************************/
+/**
+  * @brief  Initializes the MDIO interface GPIO and clocks.
+  * @param  None
+  * @retval 0 if OK, -1 if ERROR
+  */
+int32_t ETH_PHY_IO_Init(void)
+{
+  /* We assume that MDIO GPIO configuration is already done
+     in the ETH_MspInit() else it should be done here
+  */
+
+  /* Configure the MDIO Clock */
+  HAL_ETH_SetMDIOClockRange(&heth);
+
+  return 0;
+}
+
+/**
+  * @brief  De-Initializes the MDIO interface .
+  * @param  None
+  * @retval 0 if OK, -1 if ERROR
+  */
+int32_t ETH_PHY_IO_DeInit (void)
+{
+  return 0;
+}
+
+/**
+  * @brief  Read a PHY register through the MDIO interface.
+  * @param  DevAddr: PHY port address
+  * @param  RegAddr: PHY register address
+  * @param  pRegVal: pointer to hold the register value
+  * @retval 0 if OK -1 if Error
+  */
+int32_t ETH_PHY_IO_ReadReg(uint32_t DevAddr, uint32_t RegAddr, uint32_t *pRegVal)
+{
+  if(HAL_ETH_ReadPHYRegister(&heth, DevAddr, RegAddr, pRegVal) != HAL_OK)
+  {
+    return -1;
+  }
+
+  return 0;
+}
+
+/**
+  * @brief  Write a value to a PHY register through the MDIO interface.
+  * @param  DevAddr: PHY port address
+  * @param  RegAddr: PHY register address
+  * @param  RegVal: Value to be written
+  * @retval 0 if OK -1 if Error
+  */
+int32_t ETH_PHY_IO_WriteReg(uint32_t DevAddr, uint32_t RegAddr, uint32_t RegVal)
+{
+  if(HAL_ETH_WritePHYRegister(&heth, DevAddr, RegAddr, RegVal) != HAL_OK)
+  {
+    return -1;
+  }
+
+  return 0;
+}
+
+/**
+  * @brief  Get the time in millisecons used for internal PHY driver process.
+  * @retval Time value
+  */
+int32_t ETH_PHY_IO_GetTick(void)
+{
+  return HAL_GetTick();
+}
+
+/**
+  * @brief  Check the ETH link state then update ETH driver and netif link accordingly.
+  * @retval None
+  */
+void ethernet_link_thread(void* argument)
+{
+  ETH_MACConfigTypeDef MACConf = {0};
+  int32_t PHYLinkState = 0;
+  uint32_t linkchanged = 0U, speed = 0U, duplex = 0U;
+
+  struct netif *netif = (struct netif *) argument;
+/* USER CODE BEGIN ETH link init */
+
+/* USER CODE END ETH link init */
+
+  for(;;)
+  {
+  PHYLinkState = LAN8742_GetLinkState(&LAN8742);
+
+  if(netif_is_link_up(netif) && (PHYLinkState <= LAN8742_STATUS_LINK_DOWN))
+  {
+    HAL_ETH_Stop_IT(&heth);
+    netif_set_down(netif);
+    netif_set_link_down(netif);
+  }
+  else if(!netif_is_link_up(netif) && (PHYLinkState > LAN8742_STATUS_LINK_DOWN))
+  {
+    switch (PHYLinkState)
+    {
+    case LAN8742_STATUS_100MBITS_FULLDUPLEX:
+      duplex = ETH_FULLDUPLEX_MODE;
+      speed = ETH_SPEED_100M;
+      linkchanged = 1;
+      break;
+    case LAN8742_STATUS_100MBITS_HALFDUPLEX:
+      duplex = ETH_HALFDUPLEX_MODE;
+      speed = ETH_SPEED_100M;
+      linkchanged = 1;
+      break;
+    case LAN8742_STATUS_10MBITS_FULLDUPLEX:
+      duplex = ETH_FULLDUPLEX_MODE;
+      speed = ETH_SPEED_10M;
+      linkchanged = 1;
+      break;
+    case LAN8742_STATUS_10MBITS_HALFDUPLEX:
+      duplex = ETH_HALFDUPLEX_MODE;
+      speed = ETH_SPEED_10M;
+      linkchanged = 1;
+      break;
+    default:
+      break;
+    }
+
+    if(linkchanged)
+    {
+      /* Get MAC Config MAC */
+      HAL_ETH_GetMACConfig(&heth, &MACConf);
+      MACConf.DuplexMode = duplex;
+      MACConf.Speed = speed;
+      HAL_ETH_SetMACConfig(&heth, &MACConf);
+      HAL_ETH_Start_IT(&heth);
+      netif_set_up(netif);
+      netif_set_link_up(netif);
+    }
+  }
+
+/* USER CODE BEGIN ETH link Thread core code for User BSP */
+
+/* USER CODE END ETH link Thread core code for User BSP */
+
+    osDelay(100);
+  }
+}
+
+void HAL_ETH_RxAllocateCallback(uint8_t **buff)
+{
+/* USER CODE BEGIN HAL ETH RxAllocateCallback */
+  struct pbuf_custom *p = LWIP_MEMPOOL_ALLOC(RX_POOL);
+  if (p)
+  {
+    /* Get the buff from the struct pbuf address. */
+    *buff = (uint8_t *)p + offsetof(RxBuff_t, buff);
+    p->custom_free_function = pbuf_free_custom;
+    /* Initialize the struct pbuf.
+    * This must be performed whenever a buffer's allocated because it may be
+    * changed by lwIP or the app, e.g., pbuf_free decrements ref. */
+    pbuf_alloced_custom(PBUF_RAW, 0, PBUF_REF, p, *buff, ETH_RX_BUFFER_SIZE);
+  }
+  else
+  {
+    /* The zero-copy Rx pool is empty, so the DMA gets no buffer for this
+       descriptor - which is what produces RBU above. Counted since 12-08-2026. */
+    eth_rx_alloc_fail++;
+    RxAllocStatus = RX_ALLOC_ERROR;
+    *buff = NULL;
+  }
+/* USER CODE END HAL ETH RxAllocateCallback */
+}
+
+void HAL_ETH_RxLinkCallback(void **pStart, void **pEnd, uint8_t *buff, uint16_t Length)
+{
+/* USER CODE BEGIN HAL ETH RxLinkCallback */
+
+  struct pbuf **ppStart = (struct pbuf **)pStart;
+  struct pbuf **ppEnd = (struct pbuf **)pEnd;
+  struct pbuf *p = NULL;
+
+  /* Get the struct pbuf from the buff address. */
+  p = (struct pbuf *)(buff - offsetof(RxBuff_t, buff));
+  p->next = NULL;
+  p->tot_len = 0;
+  p->len = Length;
+
+  /* Chain the buffer. */
+  if (!*ppStart)
+  {
+    /* The first buffer of the packet. */
+    *ppStart = p;
+  }
+  else
+  {
+    /* Chain the buffer to the end of the packet. */
+    (*ppEnd)->next = p;
+  }
+  *ppEnd  = p;
+
+  /* Update the total length of all the buffers of the chain. Each pbuf in the chain should have its tot_len
+   * set to its own length, plus the length of all the following pbufs in the chain. */
+  for (p = *ppStart; p != NULL; p = p->next)
+  {
+    p->tot_len += Length;
+  }
+
+  /* Invalidate data cache because Rx DMA's writing to physical memory makes it stale. */
+  SCB_InvalidateDCache_by_Addr((uint32_t *)buff, Length);
+
+  /* --- Diagnostics added 30-07-2026 -------------------------------------
+     The counters established that frames arrive (rx climbs) but nothing is
+     ever transmitted (tx_calls stays 0). Since the receive plumbing and the
+     netif wiring are both correct, the remaining question is WHAT is being
+     received: either no ARP request for our address ever arrives, or the
+     bytes are arriving corrupted so lwIP rejects them. This decodes both. */
+
+  /* Raw Ethernet header of the first few frames - confirms the payload bytes
+     are intact and correctly aligned, not shifted or byte-swapped.
+     Gated: see ETH_DIAG_VERBOSE in main.h for why this must stay off when
+     latency matters. */
+#if ETH_DIAG_VERBOSE
+  if (eth_rx_frames < 6U)
+  {
+    printf("eth: rx[%lu] len=%u dst=%02X:%02X:%02X:%02X:%02X:%02X"
+           " src=%02X:%02X:%02X:%02X:%02X:%02X type=%02X%02X\r\n",
+           (unsigned long)eth_rx_frames, (unsigned)Length,
+           buff[0], buff[1], buff[2], buff[3], buff[4], buff[5],
+           buff[6], buff[7], buff[8], buff[9], buff[10], buff[11],
+           buff[12], buff[13]);
+  }
+#endif
+
+  /* ARP specifically (EtherType 0x0806): op 1 = request, 2 = reply. The
+     "for" address is what decides whether lwIP must answer - it has to match
+     our 192.168.1.10 exactly, or etharp_input() silently ignores it. */
+  if ((Length >= 42U) && (buff[12] == 0x08U) && (buff[13] == 0x06U))
+  {
+    /* Target protocol address, bytes 38..41, assembled to match ip4_addr_t's
+       network-byte-order layout so it can be compared directly. */
+    uint32_t tip = ((uint32_t)buff[38])
+                 | ((uint32_t)buff[39] << 8)
+                 | ((uint32_t)buff[40] << 16)
+                 | ((uint32_t)buff[41] << 24);
+
+    /* Counting is free - keep it unconditionally so the numbers are always
+       available to print on demand. Only the printf()s are gated. */
+    eth_arp_rx++;
+    if (tip == netif_ip4_addr(&gnetif)->addr)
+    {
+      eth_arp_for_us++;
+#if ETH_DIAG_VERBOSE
+      printf("eth: *** ARP FOR US *** op=%u from %u.%u.%u.%u\r\n",
+             (unsigned)(((uint32_t)buff[20] << 8) | buff[21]),
+             buff[28], buff[29], buff[30], buff[31]);
+#endif
+    }
+#if ETH_DIAG_VERBOSE
+    else
+    {
+      /* Not for us. Capped, because gateway-probe traffic is relentless. */
+      static uint32_t arp_other = 0;
+      if (arp_other < 20U)
+      {
+        arp_other++;
+        printf("eth: ARP op=%u from %u.%u.%u.%u for %u.%u.%u.%u (not us)\r\n",
+               (unsigned)(((uint32_t)buff[20] << 8) | buff[21]),
+               buff[28], buff[29], buff[30], buff[31],
+               buff[38], buff[39], buff[40], buff[41]);
+      }
+    }
+#endif
+  }
+
+  /* One increment per received buffer handed up by the DMA. */
+  eth_rx_frames++;
+
+/* USER CODE END HAL ETH RxLinkCallback */
+}
+
+void HAL_ETH_TxFreeCallback(uint32_t * buff)
+{
+/* USER CODE BEGIN HAL ETH TxFreeCallback */
+  /* Drop the reference eth_tx_output() took before HAL_ETH_Transmit_IT().
+     This is the OPPOSITE of the polled build, where lwIP retained sole
+     ownership and pbuf_free() here would have been a double free.
+     Reached from HAL_ETH_ReleaseTxPacket(), which the superloop calls - never
+     from the ISR, because pbuf_free() touches lwIP's unsynchronised heap. */
+  pbuf_free((struct pbuf *)buff);
+  eth_tx_frames++;
+/* USER CODE END HAL ETH TxFreeCallback */
+}
+
+/* USER CODE BEGIN 8 */
+
+/* ===========================================================================
+ * THE THREE ETH ISR CALLBACKS WERE REMOVED FROM HERE ON 07-08-2026.
+ * ===========================================================================
+ * This block used to define HAL_ETH_RxCpltCallback, HAL_ETH_TxCpltCallback and
+ * HAL_ETH_ErrorCallback, carried over from HTTP_Server_H753_ISR_V00 where
+ * NO_SYS was 1 and they set the volatile flags eth_rx_pending /
+ * eth_tx_done_pending for a bare-metal superloop to poll.
+ *
+ * Under FreeRTOS (NO_SYS=0) CubeMX GENERATES ALL THREE ITSELF, further up this
+ * file, and they release RxPktSemaphore / TxPktSemaphore instead. Keeping the
+ * copies here meant every one of the three had TWO definitions in the same
+ * translation unit, so the file simply would not compile.
+ *
+ * The generated semaphore versions are the correct ones for this build:
+ * ethernetif_input() is now a dedicated realtime THREAD created by
+ * osThreadNew() inside low_level_init(), which blocks on RxPktSemaphore. There
+ * is no superloop left to poll a flag.
+ *
+ * Do not reintroduce them. If receive-side instrumentation is wanted again, add
+ * counters to the GENERATED callbacks' own USER CODE space, or wrap
+ * netif->input the way eth_rx_input() below does.
+ * ======================================================================== */
+
+/* USER CODE END 8 */

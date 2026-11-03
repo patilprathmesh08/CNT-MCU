@@ -1,0 +1,14 @@
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/ntp_client.c:128:17:ntp_lock	16	static,ignoring_inline_asm
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/ntp_client.c:142:13:ntp_unlock	24	static,ignoring_inline_asm
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/ntp_client.c:157:17:ntp_be32	16	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/ntp_client.c:184:13:ntp_read_local	32	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/ntp_client.c:209:13:ntp_build_request	16	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/ntp_client.c:232:16:ntp_parse_reply	136	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/ntp_client.c:300:13:ntp_apply_sync	152	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/ntp_client.c:355:16:ntp_poll_once	184	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/ntp_client.c:560:13:ntp_task	24	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/ntp_client.c:610:6:ntp_client_init	16	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/ntp_client.c:662:9:ntp_get_epoch_us	104	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/ntp_client.c:709:9:ntp_format_epoch	48	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/ntp_client.c:762:9:ntp_is_synced	4	static
+F:/VS_STM32_temp/CNR-ICU-0.2/Core/Src/ntp_client.c:767:5:ntp_selftest	168	static

@@ -1,4 +1,4 @@
-name: CNR MCU (STM32H753) CI Pipeline
+name: CNR MCU CI Pipeline
 
 # Runs on push / PR for these branches, and manually from the Actions tab.
 # NOTE: every branch listed under push must contain the CNR-ICU-0.2 folder,

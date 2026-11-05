@@ -1,6 +1,8 @@
-name: CNR MCU (STM32H753) CI Pipeline
+name: CNR MCU CI Pipeline
 
 # Runs on push / PR for these branches, and manually from the Actions tab.
+# NOTE: every branch listed under push must contain the CNR-ICU-0.2 folder,
+#       otherwise the "Check Project Folder" step fails on purpose.
 on:
   push:
     branches:
@@ -23,7 +25,7 @@ env:
 
 jobs:
   # ─── JOB 1: BUILD FIRMWARE ──────────────────────────────────────────────────
-  # Tool versions match the developer PC: ARM GCC 15.2.1, CMake 4.3.1, Ninja 1.13.2
+  # Tool versions: ARM GCC 14.3.1, CMake 4.3.1, Ninja 1.13.2
   build:
     name: Build CNR MCU Firmware
     runs-on: ubuntu-latest
@@ -53,11 +55,11 @@ jobs:
           fi
           echo "OK: using project folder '$PROJECT_DIR'"
 
-      # Step 4 - Install Arm GNU Toolchain 15.2.rel1 (same as the PC)
+      # Step 4 - Install Arm GNU Toolchain 14.3.rel1 (arm-none-eabi-gcc 14.3.1)
       - name: Install ARM GCC Toolchain
         run: |
-          TC="arm-gnu-toolchain-15.2.rel1-x86_64-arm-none-eabi"
-          wget -q "https://developer.arm.com/-/media/Files/downloads/gnu/15.2.rel1/binrel/${TC}.tar.xz"
+          TC="arm-gnu-toolchain-14.3.rel1-x86_64-arm-none-eabi"
+          wget -q "https://developer.arm.com/-/media/Files/downloads/gnu/14.3.rel1/binrel/${TC}.tar.xz"
           tar -xf "${TC}.tar.xz" -C "$HOME"
           echo "$HOME/${TC}/bin" >> "$GITHUB_PATH"    # put arm-none-eabi-gcc on PATH for next steps
 
@@ -74,18 +76,18 @@ jobs:
         with:
           cmake-version: '4.3.1'
 
-      # Step 7 - Print tool versions and stop if any of them does not match the PC
+      # Step 7 - Print tool versions and stop if any of them is not the expected one
       - name: Check Tool Versions
         run: |
           arm-none-eabi-gcc --version
           ninja --version
           cmake --version
           FAIL=0
-          arm-none-eabi-gcc --version | head -1 | grep -q " 15.2.1 " || { echo "ERROR: ARM GCC is not 15.2.1"; FAIL=1; }
+          arm-none-eabi-gcc --version | head -1 | grep -q " 14.3.1 " || { echo "ERROR: ARM GCC is not 14.3.1"; FAIL=1; }
           [ "$(ninja --version)" = "1.13.2" ]                         || { echo "ERROR: Ninja is not 1.13.2"; FAIL=1; }
           cmake --version | head -1 | grep -q " 4.3.1$"               || { echo "ERROR: CMake is not 4.3.1"; FAIL=1; }
           if [ "$FAIL" -ne 0 ]; then exit 1; fi
-          echo "OK: tool versions match the developer PC"
+          echo "OK: tool versions match"
 
       # Step 8 - Prepare the source for a plain Arm GCC build (CI copy only, repo not changed):
       #  - remove the committed build/ folder (its CMakeCache.txt has another PC's paths)
@@ -118,7 +120,7 @@ jobs:
           cmake --build --preset Release
           arm-none-eabi-size build/Release/${TARGET_NAME}.elf
 
-        # Step 11 - Upload Debug firmware (.elf for debugging, .bin for flashing)
+      # Step 11 - Upload Debug firmware (.elf for debugging, .bin for flashing)
       - name: Upload Debug Firmware
         uses: actions/upload-artifact@v4
         with:
@@ -129,7 +131,7 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-            # ─── JOB 2: DOXYGEN DOCUMENTATION ───────────────────────────────────────────
+  # ─── JOB 2: DOXYGEN DOCUMENTATION ───────────────────────────────────────────
   # Runs in parallel with the build job. Documents only our own code
   # (Core, LWIP/MBEDTLS App+Target), not Drivers/ or Middlewares/.
   doxygen:
@@ -143,14 +145,24 @@ jobs:
         with:
           ref: ${{ github.event.inputs.ref || github.ref }}
 
-      # Step 2 - Install Doxygen (graphviz draws the call/include graphs)
+      # Step 2 - Stop early with a clear message if PROJECT_DIR is wrong
+      - name: Check Project Folder
+        run: |
+          if [ ! -d "$PROJECT_DIR/Core" ]; then
+            echo "ERROR: '$PROJECT_DIR/Core' not found. Folders in repo:"
+            ls -la
+            exit 1
+          fi
+          echo "OK: using project folder '$PROJECT_DIR'"
+
+      # Step 3 - Install Doxygen (graphviz draws the call/include graphs)
       - name: Install Doxygen
         run: |
           sudo apt-get update
           sudo apt-get install -y doxygen graphviz
           doxygen --version
 
-      # Step 3 - Use the project Doxyfile, or create a default one for our own code only.
+      # Step 4 - Use the project Doxyfile, or create a default one for our own code only.
       #          Settings are appended: in a Doxyfile the last value of a tag wins.
       - name: Setup Doxyfile
         working-directory: ${{ env.PROJECT_DIR }}
@@ -174,7 +186,7 @@ jobs:
           fi
           grep -E '^(PROJECT_NAME|INPUT|OUTPUT_DIRECTORY) ' Doxyfile | tail -3
 
-      # Step 4 - Generate the documentation (warnings are shown in this step's log, not fatal)
+      # Step 5 - Generate the documentation (warnings are shown in this step's log, not fatal)
       - name: Run Doxygen
         working-directory: ${{ env.PROJECT_DIR }}
         run: |
@@ -189,7 +201,7 @@ jobs:
           fi
           test -f doxygen_docs/html/index.html || { echo "ERROR: HTML was not generated"; exit 1; }
 
-      # Step 5 - Upload the generated HTML documentation (open html/index.html after download)
+      # Step 6 - Upload the generated HTML documentation (open html/index.html after download)
       - name: Upload Doxygen HTML
         uses: actions/upload-artifact@v4
         with:
